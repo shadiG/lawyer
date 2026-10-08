@@ -12,6 +12,8 @@ cp .env.example .env     # puis renseigner PAYLOAD_SECRET (≥ 32 car.), ADMIN_E
 npm run dev              # site : http://localhost:3000 · admin : http://localhost:3000/admin
 ```
 
+Si le navigateur affiche « module factory is not available » ou « stale browser cache » (cache de développement périmé), lancez `npm run dev:clean` puis rechargez la page sans cache (Cmd/Ctrl + Maj + R).
+
 Au premier démarrage la base est créée dans `data/`, le compte administrateur est créé depuis `ADMIN_*` et l'admin est pré-remplie avec le contenu par défaut. Sans clé Resend, une demande de rendez-vous est enregistrée dans l'admin et affichée dans la console.
 
 ## Personnaliser
