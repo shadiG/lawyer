@@ -5,6 +5,7 @@ import { PostGrid } from "../../_components/post-grid";
 import { SectionHeading } from "../../_components/section-heading";
 import { getContent } from "../../_lib/cms";
 import { getPosts } from "../../_lib/posts";
+import { connection } from "next/server";
 
 /**
  * Page dépendante de la base (articles publiés à tout moment) : un article inconnu
@@ -20,6 +21,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  // Rendu à chaque requête : jamais de contenu du CMS figé au build (voir docs/ops/vps.md).
+  await connection();
   const [{ site }, posts] = await Promise.all([getContent(), getPosts()]);
   return (
     <>

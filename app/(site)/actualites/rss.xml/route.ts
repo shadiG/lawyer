@@ -1,12 +1,15 @@
 import { getContent } from "../../../_lib/cms";
 import { siteUrl } from "../../../_lib/content";
 import { getPosts } from "../../../_lib/posts";
+import { connection } from "next/server";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
 /** Flux RSS des articles publiés. */
 export async function GET() {
+  // Rendu à chaque requête : jamais de contenu du CMS figé au build (voir docs/ops/vps.md).
+  await connection();
   const [{ site }, posts] = await Promise.all([getContent(), getPosts(30)]);
   const items = posts
     .map(

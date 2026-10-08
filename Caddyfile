@@ -1,0 +1,5 @@
+# Proxy HTTPS (docker compose --profile https) : certificat automatique pour {$DOMAIN}.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
