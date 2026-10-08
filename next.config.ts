@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   // l'admin Payload (new Date()) à froid et remplissait la console d'alertes. Sans
   // effet utile ici : le site n'a qu'une page d'accueil et deux pages légales.
   partialPrefetching: false,
+  experimental: {
+    // 404 générale personnalisée (app/global-not-found.tsx) : l'app a deux layouts racines.
+    globalNotFound: true,
+  },
   images: {
     // Les photos de la médiathèque sont servies par Payload.
     localPatterns: [{ pathname: "/api/media/file/**" }],
