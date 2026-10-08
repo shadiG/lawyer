@@ -85,3 +85,37 @@ export const Shield = (p: P) => (
     <path d="m9 12 2.2 2.2L15.2 10" />
   </Icon>
 );
+
+export const Layers = (p: P) => (
+  <Icon {...p}>
+    <path d="m12 4 8.5 4.5L12 13 3.5 8.5 12 4Z" />
+    <path d="m3.5 12.5 8.5 4.5 8.5-4.5M3.5 16.5 12 21l8.5-4.5" />
+  </Icon>
+);
+export const Search = (p: P) => (
+  <Icon {...p}>
+    <circle cx="10.5" cy="10.5" r="6" />
+    <path d="m15 15 5 5" />
+  </Icon>
+);
+export const User = (p: P) => (
+  <Icon {...p}>
+    <circle cx="12" cy="8.5" r="3.5" />
+    <path d="M5 20c.6-3.8 3.1-6 7-6s6.4 2.2 7 6" />
+  </Icon>
+);
+export const ChevronUp = (p: P) => (
+  <Icon {...p} strokeWidth={2.2}>
+    <path d="m5 15 7-7 7 7" />
+  </Icon>
+);
+export const Check = (p: P) => (
+  <Icon {...p} strokeWidth={1.75}>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+);
+export const Quote = (p: P) => (
+  <Icon {...p} strokeWidth={1.25}>
+    <path d="M9.5 7C6.5 7.8 5 10 5 13v4h5v-5H7.5c0-2 .8-3.3 2-4ZM19 7c-3 .8-4.5 3-4.5 6v4h5v-5H17c0-2 .8-3.3 2-4Z" />
+  </Icon>
+);

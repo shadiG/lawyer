@@ -33,6 +33,13 @@ export const Practices: CollectionConfig = {
         { label: "Maison (immobilier)", value: "property" },
       ],
     },
+    {
+      name: "image",
+      type: "upload",
+      relationTo: "media",
+      label: "Image de la carte",
+      admin: { description: "Facultatif. Format paysage conseillé (3:2). Sans image, un fond bleu avec l’icône est affiché." },
+    },
     { name: "text", type: "textarea", label: "Présentation", required: true, maxLength: 260 },
     {
       name: "items",

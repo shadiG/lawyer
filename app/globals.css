@@ -1,23 +1,26 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ *
- * Design tokens — « Editorial Luxury » : ivoire, encre, laiton.
+ * Design tokens : cabinet classique, bleu franc, noir et blanc.
+ * Les noms historiques (paper, ink, brass…) sont conservés pour que tous
+ * les composants suivent la palette sans changement de classes.
  * ------------------------------------------------------------------ */
 :root {
-  --paper: #f5f0e6;
-  --paper-deep: #ece5d6;
-  --paper-card: #fbf8f1;
-  --ink: #14181d;
-  --ink-soft: #4b5058;
-  --ink-faint: #7d8087;
-  --night: #11161a;
-  --night-soft: #1a2127;
-  --brass: #7a5a32;
-  --brass-bright: #c3a074;
-  --hairline: rgb(20 24 29 / 0.1);
-  --hairline-night: rgb(245 240 230 / 0.12);
+  --paper: #ffffff;
+  --paper-deep: #f3f5f8; /* sections alternées */
+  --paper-card: #ffffff;
+  --ink: #12161d;
+  --ink-soft: #4a515c;
+  --ink-faint: #7a808b;
+  --night: #16191e; /* barre de navigation, pied de page */
+  --night-soft: #20252c;
+  --brass: #0b49b3; /* bleu principal */
+  --brass-bright: #6aa0ff; /* bleu sur fond sombre */
+  --brass-dark: #083a91; /* survol */
+  --hairline: rgb(18 22 29 / 0.1);
+  --hairline-night: rgb(255 255 255 / 0.12);
 
-  /* Easings (Emil / Apple) : sortie forte, jamais de ease-in ni de linear. */
+  /* Easings : sortie forte, jamais de ease-in ni de linear. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -33,15 +36,16 @@
   --color-night-soft: var(--night-soft);
   --color-brass: var(--brass);
   --color-brass-bright: var(--brass-bright);
+  --color-brass-dark: var(--brass-dark);
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), "Iowan Old Style", Georgia, serif;
+  --font-serif: var(--font-source-serif), "Iowan Old Style", Georgia, serif;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 6rem;
+  scroll-padding-top: 5rem;
   background: var(--paper);
   -webkit-text-size-adjust: 100%;
 }
@@ -57,16 +61,16 @@ body {
 }
 
 ::selection {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--brass);
+  color: #fff;
 }
 
-/* Titres : tracking serré et interligne court (Apple, typographie optique). */
+/* Titres : serif robuste, tracking légèrement serré (Apple : optique selon la taille). */
 .display {
   font-family: var(--font-serif);
-  font-weight: 400;
-  letter-spacing: -0.025em;
-  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.12;
   text-wrap: balance;
 }
 
@@ -74,22 +78,15 @@ body {
   text-wrap: pretty;
 }
 
-/* Grain papier : couche fixe, jamais sur un conteneur qui défile. */
+/* Plus de grain : l'identité est nette et franche. */
 .grain {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  opacity: 0.045;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  display: none;
 }
 
 /* Focus visible : anneau net, jamais supprimé. */
 :focus-visible {
   outline: 2px solid var(--brass);
   outline-offset: 3px;
-  border-radius: 6px;
 }
 .on-night :focus-visible {
   outline-color: var(--brass-bright);
@@ -117,6 +114,14 @@ body {
   transform: scale(0.97);
 }
 
+/* Découpe en biais (panneau du logo, barre de navigation). */
+.slant-right {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 3.25rem) 100%, 0 100%);
+}
+.slant-left {
+  clip-path: polygon(1.75rem 0, 100% 0, 100% 100%, 0 100%);
+}
+
 /* Barre de défilement horizontale discrète. */
 .no-scrollbar {
   scrollbar-width: none;
@@ -141,4 +146,91 @@ body {
     backdrop-filter: none !important;
     background: var(--paper-card) !important;
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * Contenu d'un article (éditeur WYSIWYG de l'administration)
+ * ------------------------------------------------------------------ */
+.article-body {
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.article-body > :first-child {
+  margin-top: 0;
+}
+.article-body p {
+  margin: 0 0 1.35em;
+  text-wrap: pretty;
+}
+.article-body h2,
+.article-body h3 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.012em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.article-body h2 {
+  margin: 2.1em 0 0.6em;
+  font-size: 1.8rem;
+}
+.article-body h3 {
+  margin: 1.8em 0 0.5em;
+  font-size: 1.4rem;
+}
+.article-body ul,
+.article-body ol {
+  margin: 0 0 1.35em;
+  padding-left: 1.5em;
+}
+.article-body ul {
+  list-style: disc;
+}
+.article-body ol {
+  list-style: decimal;
+}
+.article-body li {
+  margin: 0.35em 0;
+  padding-left: 0.2em;
+}
+.article-body li::marker {
+  color: var(--brass);
+}
+.article-body blockquote {
+  margin: 1.8em 0;
+  padding: 0.2em 0 0.2em 1.3em;
+  border-left: 3px solid var(--brass);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+.article-body a {
+  color: var(--brass);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.article-body a:hover {
+  color: var(--brass-dark);
+}
+.article-body strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+.article-body hr {
+  margin: 2.4em 0;
+  border: 0;
+  border-top: 1px solid var(--hairline);
+}
+.article-body code {
+  padding: 0.1em 0.35em;
+  background: var(--paper-deep);
+  font-size: 0.9em;
+}
+.article-figure {
+  margin: 2em 0;
 }

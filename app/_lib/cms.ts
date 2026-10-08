@@ -3,7 +3,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getPayload } from "payload";
 import { CMS_TAG } from "@/cms/hooks/revalidate";
 import type { Media } from "@/payload-types";
-import { defaultContent as d, OTHER_MOTIF, toTelHref, type PracticeIcon, type SiteContent } from "./content";
+import { defaultContent as d, OTHER_MOTIF, toTelHref, type Availability, type PracticeIcon, type SiteContent } from "./content";
 
 /* Fusion « admin > défaut », champ par champ : un champ vidé retombe sur le défaut. */
 const str = (v: unknown, fallback: string) => (typeof v === "string" && v.trim() ? v.trim() : fallback);
@@ -11,6 +11,20 @@ const rows = <T, R>(v: T[] | null | undefined, map: (x: T) => R | null, fallback
   const out = (v ?? []).map(map).filter((x): x is R => x !== null);
   return out.length ? out : fallback;
 };
+
+/** Jours ouverts valides (0–6), jours fermés au format AAAA-MM-JJ, bornes raisonnables. */
+function availabilityFrom(a: { weekdays?: (string | number)[] | null; closedDates?: { date?: string | null; reason?: string | null }[] | null; minNoticeDays?: number | null; daysShown?: number | null } | null | undefined): Availability {
+  const clamp = (n: unknown, min: number, max: number, repli: number) =>
+    typeof n === "number" && Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : repli;
+  const weekdays = (a?.weekdays ?? []).map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6);
+  return {
+    // Aucun jour coché = on garde les défauts (sinon le formulaire serait vide).
+    weekdays: weekdays.length ? [...new Set(weekdays)] : d.availability.weekdays,
+    closedDates: (a?.closedDates ?? []).flatMap((c) => (c.date ? [{ date: c.date.slice(0, 10), reason: c.reason ?? "" }] : [])),
+    minNoticeDays: clamp(a?.minNoticeDays, 0, 30, d.availability.minNoticeDays),
+    daysShown: clamp(a?.daysShown, 3, 30, d.availability.daysShown),
+  };
+}
 
 const ICONS: PracticeIcon[] = ["family", "work", "criminal", "property"];
 
@@ -28,7 +42,7 @@ export async function getContent(): Promise<SiteContent> {
     const [settings, home, practices] = await Promise.all([
       payload.findGlobal({ slug: "settings", depth: 1 }),
       payload.findGlobal({ slug: "home", depth: 0 }),
-      payload.find({ collection: "practices", sort: "order", limit: 12, depth: 0, pagination: false }),
+      payload.find({ collection: "practices", sort: "order", limit: 12, depth: 1, pagination: false }),
     ]);
     cacheLife("max");
 
@@ -42,6 +56,7 @@ export async function getContent(): Promise<SiteContent> {
         title: str(p.title, ""),
         text: str(p.text, ""),
         items: rows(p.items, (i) => str(i.text, "") || null, []),
+        imageUrl: typeof p.image === "object" && p.image ? ((p.image as Media).sizes?.card?.url ?? (p.image as Media).url ?? null) : null,
       }),
       d.practices,
     );
@@ -66,10 +81,12 @@ export async function getContent(): Promise<SiteContent> {
         portraitUrl: photo?.sizes?.portrait?.url ?? photo?.url ?? null,
         portraitAlt: photo?.alt ?? null,
       },
+      availability: availabilityFrom(settings.availability),
       hero: {
         eyebrow: str(home.hero?.eyebrow, d.hero.eyebrow),
         title: str(home.hero?.title, d.hero.title),
         lead: str(home.hero?.lead, d.hero.lead),
+        highlights: rows(home.hero?.highlights, (h) => (h.title && h.text ? { title: h.title, text: h.text } : null), d.hero.highlights),
       },
       about: {
         eyebrow: d.about.eyebrow,

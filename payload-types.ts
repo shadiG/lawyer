@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     bookings: Booking;
+    posts: Post;
     practices: Practice;
     media: Media;
     users: User;
@@ -79,6 +80,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     bookings: BookingsSelect<false> | BookingsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
     practices: PracticesSelect<false> | PracticesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -128,7 +130,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Demandes reçues par le formulaire du site. Une copie est aussi envoyée par e-mail.
+ * Demandes reçues par le formulaire du site. Passez le statut à « Confirmée » pour prévenir le client par e-mail.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bookings".
@@ -136,6 +138,21 @@ export interface UserAuthOperations {
 export interface Booking {
   id: number;
   status: 'nouveau' | 'confirme' | 'sans-suite' | 'archive';
+  /**
+   * Date et heure du rendez-vous, indiquées au client dans l’e-mail de confirmation.
+   */
+  slot?: string | null;
+  /**
+   * Ajouté à l’e-mail de confirmation ou de refus. Facultatif.
+   */
+  messageToClient?: string | null;
+  /**
+   * L’e-mail part quand le statut passe à « Confirmée » ou « Refusée / sans suite ».
+   */
+  notifyClient?: boolean | null;
+  notifiedAt?: string | null;
+  notifiedStatus?: string | null;
+  notifyError?: string | null;
   /**
    * Visible uniquement dans l’administration.
    */
@@ -152,25 +169,52 @@ export interface Booking {
   createdAt: string;
 }
 /**
- * Les cartes de la section « Domaines ». L’ordre croissant définit l’ordre d’affichage.
+ * Les articles du blog (« Actualités »). Un brouillon n'est pas visible sur le site tant que vous ne cliquez pas sur « Publier ».
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "practices".
+ * via the `definition` "posts".
  */
-export interface Practice {
+export interface Post {
   id: number;
   title: string;
-  icon: 'family' | 'work' | 'criminal' | 'property';
-  text: string;
-  items?:
-    | {
-        text: string;
-        id?: string | null;
-      }[]
-    | null;
-  order?: number | null;
+  /**
+   * Une à deux phrases. Affiché dans la liste des articles et dans les résultats de recherche.
+   */
+  excerpt: string;
+  /**
+   * Facultatif. Format paysage conseillé (3:2).
+   */
+  cover?: (number | null) | Media;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Générée depuis le titre ; elle apparaît dans le lien de l'article. Laissez vide pour la régénérer.
+   */
+  slug?: string | null;
+  /**
+   * Facultatif : affiché comme catégorie de l'article.
+   */
+  practice?: (number | null) | Practice;
+  /**
+   * Remplie à la première publication ; modifiable (par exemple pour antidater).
+   */
+  publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * Photos et images du site.
@@ -204,7 +248,40 @@ export interface Media {
       filesize?: number | null;
       filename?: string | null;
     };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
   };
+}
+/**
+ * Les cartes de la section « Domaines ». L’ordre croissant définit l’ordre d’affichage.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "practices".
+ */
+export interface Practice {
+  id: number;
+  title: string;
+  icon: 'family' | 'work' | 'criminal' | 'property';
+  /**
+   * Facultatif. Format paysage conseillé (3:2). Sans image, un fond bleu avec l’icône est affiché.
+   */
+  image?: (number | null) | Media;
+  text: string;
+  items?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -260,6 +337,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'bookings';
         value: number | Booking;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
       } | null)
     | ({
         relationTo: 'practices';
@@ -321,6 +402,12 @@ export interface PayloadMigration {
  */
 export interface BookingsSelect<T extends boolean = true> {
   status?: T;
+  slot?: T;
+  messageToClient?: T;
+  notifyClient?: T;
+  notifiedAt?: T;
+  notifiedStatus?: T;
+  notifyError?: T;
   note?: T;
   name?: T;
   email?: T;
@@ -335,11 +422,28 @@ export interface BookingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  excerpt?: T;
+  cover?: T;
+  content?: T;
+  slug?: T;
+  practice?: T;
+  publishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "practices_select".
  */
 export interface PracticesSelect<T extends boolean = true> {
   title?: T;
   icon?: T;
+  image?: T;
   text?: T;
   items?:
     | T
@@ -372,6 +476,16 @@ export interface MediaSelect<T extends boolean = true> {
     | T
     | {
         portrait?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
           | T
           | {
               url?: T;
@@ -491,6 +605,24 @@ export interface Setting {
    * Ex. : un jour ouvré. Affiché dans la page : ne promettez que ce que vous tenez.
    */
   responseTime?: string | null;
+  availability?: {
+    /**
+     * Les autres jours ne sont pas proposés.
+     */
+    weekdays?: ('1' | '2' | '3' | '4' | '5' | '6' | '0')[] | null;
+    closedDates?:
+      | {
+          date: string;
+          reason?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * 0 = le jour même peut être proposé ; 1 = à partir de demain ; 2 = à partir d’après-demain…
+     */
+    minNoticeDays?: number | null;
+    daysShown?: number | null;
+  };
   siret?: string | null;
   vat?: string | null;
   insurer?: string | null;
@@ -516,6 +648,13 @@ export interface Home {
     eyebrow?: string | null;
     title: string;
     lead?: string | null;
+    highlights?:
+      | {
+          title: string;
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
   };
   about?: {
     title?: string | null;
@@ -590,6 +729,20 @@ export interface SettingsSelect<T extends boolean = true> {
         id?: T;
       };
   responseTime?: T;
+  availability?:
+    | T
+    | {
+        weekdays?: T;
+        closedDates?:
+          | T
+          | {
+              date?: T;
+              reason?: T;
+              id?: T;
+            };
+        minNoticeDays?: T;
+        daysShown?: T;
+      };
   siret?: T;
   vat?: T;
   insurer?: T;
@@ -612,6 +765,13 @@ export interface HomeSelect<T extends boolean = true> {
         eyebrow?: T;
         title?: T;
         lead?: T;
+        highlights?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              id?: T;
+            };
       };
   about?:
     | T

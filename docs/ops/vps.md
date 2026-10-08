@@ -36,7 +36,7 @@ Un enregistrement `A` pour `lawyer.shadgramers.com` vers le VPS (ou le domaine r
    | `BOOKING_TO_EMAIL` | adresse qui reçoit les notifications. Facultatif | non |
    | `BOOKING_FROM_EMAIL` | `Cabinet <rendez-vous@domaine-verifie>`. Facultatif | non |
 
-   Les trois variables d'envoi sont facultatives : une demande de rendez-vous est **toujours enregistrée** dans l'administration ; l'e-mail est une notification en plus. Si l'enregistrement et l'e-mail échouent tous les deux, le visiteur voit un message l'invitant à téléphoner.
+   Les trois variables d'envoi sont facultatives pour **recevoir** les demandes : une demande de rendez-vous est toujours enregistrée dans l'administration. Elles deviennent nécessaires pour **écrire au client** (accusé de réception, confirmation ou refus depuis l'admin) : sans `RESEND_API_KEY` et `BOOKING_FROM_EMAIL`, l'admin affiche « E-mail non configuré » et le client n'est pas prévenu. Si l'enregistrement et l'e-mail échouent tous les deux, le visiteur voit un message l'invitant à téléphoner.
 7. Avancé → **Auto Deploy désactivé** : GitHub déclenche le déploiement après le CI.
 8. Déployer une première fois à la main. Au premier démarrage, la base est créée (migrations), le compte administrateur est créé depuis `ADMIN_*`, et l'administration est pré-remplie avec le contenu par défaut.
 

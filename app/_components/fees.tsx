@@ -1,39 +1,28 @@
 import type { SiteContent } from "../_lib/content";
-import { Eyebrow } from "./button";
-import { Reveal, SplitHeading } from "./reveal";
+import { Reveal } from "./reveal";
+import { SectionHeading } from "./section-heading";
 
 export function Fees({ fees }: { fees: SiteContent["fees"] }) {
   return (
-    <section id="honoraires" className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-40">
-      <div className="grid gap-14 md:grid-cols-12 md:gap-8">
-        <div className="md:col-span-5">
-          <Reveal>
-            <Eyebrow>{fees.eyebrow}</Eyebrow>
-          </Reveal>
-          <SplitHeading
-            text={fees.title}
-            className="display mt-7 text-[clamp(2.25rem,5vw,4.25rem)]"
-          />
-          <Reveal delay={0.1}>
-            <p className="prose-fr mt-8 max-w-md text-lg leading-relaxed text-ink-soft">{fees.lead}</p>
-          </Reveal>
-        </div>
+    <section id="honoraires" className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+      <SectionHeading title="Honoraires" subtitle={fees.title} />
+      <Reveal delay={0.05}>
+        <p className="prose-fr mx-auto mt-6 max-w-2xl text-center leading-relaxed text-ink-soft">{fees.lead}</p>
+      </Reveal>
 
-        <div className="space-y-5 md:col-span-6 md:col-start-7">
-          {fees.items.map((item, i) => (
-            // Léger décalage horizontal en cascade (écrans larges seulement).
-            <Reveal key={item.title} delay={i * 0.07}>
-              <div
-                className={`rounded-[2rem] bg-ink/[0.045] p-1.5 ring-1 ring-ink/10 ${i === 1 ? "md:translate-x-8" : i === 2 ? "md:translate-x-3" : ""}`}
-              >
-                <div className="rounded-[calc(2rem-0.375rem)] bg-paper-card p-7 shadow-[inset_0_1px_0_rgb(255_255_255/0.8)] md:p-9">
-                  <h3 className="display text-[clamp(1.5rem,2.4vw,2rem)]">{item.title}</h3>
-                  <p className="prose-fr mt-3 leading-relaxed text-ink-soft">{item.text}</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+      <div
+        className="mt-14 grid gap-6"
+        style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, 17rem), 1fr))` }}
+      >
+        {fees.items.map((item, i) => (
+          <Reveal key={item.title} delay={i * 0.08} className="h-full">
+            <div className="h-full border-t-[3px] border-brass bg-paper-deep p-8 transition-colors duration-300 hover:bg-white hover:shadow-[0_18px_36px_-20px_rgb(18_22_29/0.35)]">
+              <span className="display text-[2.4rem] leading-none text-brass/30">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="display mt-3 text-[1.3rem]">{item.title}</h3>
+              <p className="prose-fr mt-3 leading-relaxed text-ink-soft">{item.text}</p>
+            </div>
+          </Reveal>
+        ))}
       </div>
     </section>
   );
