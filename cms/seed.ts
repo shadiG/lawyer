@@ -1,4 +1,5 @@
 import type { Payload } from "payload";
+import { simpleLexical } from "../app/_lib/blog";
 import { defaultContent as d } from "../app/_lib/content";
 
 /**
@@ -25,6 +26,24 @@ export async function seed(payload: Payload) {
 
   const { totalDocs: practices } = await payload.count({ collection: "practices" });
   if (practices > 0) return;
+
+  // Premier démarrage seulement : un article d'exemple publié (à modifier ou supprimer).
+  // Il garantit aussi que le build a au moins une page d'article à pré-rendre.
+  await payload.create({
+    collection: "posts",
+    draft: false,
+    data: {
+      title: "Bienvenue sur le blog du cabinet",
+      excerpt: "Un exemple d’article, à modifier ou à supprimer depuis l’administration.",
+      publishedAt: new Date().toISOString(),
+      _status: "published",
+      content: simpleLexical([
+        { p: "Ceci est un exemple d’article. Vous pouvez le modifier, le remplacer ou le supprimer depuis l’administration, dans Contenu › Articles." },
+        { h2: "Rédiger un article" },
+        { p: "L’éditeur fonctionne comme un traitement de texte : titres, listes, liens, citations et images. Enregistrez un brouillon pour y revenir plus tard ; l’article n’apparaît sur le site qu’après avoir cliqué sur « Publier »." },
+      ]) as never,
+    },
+  });
 
   const s = d.site;
   await payload.updateGlobal({

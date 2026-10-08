@@ -3,10 +3,12 @@ import { Booking } from "../_components/booking";
 import { Fees } from "../_components/fees";
 import { Footer } from "../_components/footer";
 import { Hero } from "../_components/hero";
+import { LatestPosts } from "../_components/latest-posts";
 import { Nav } from "../_components/nav";
 import { Practices } from "../_components/practices";
 import { Process } from "../_components/process";
 import { getContent } from "../_lib/cms";
+import { getPosts } from "../_lib/posts";
 import { siteUrl, type SiteContent } from "../_lib/content";
 
 
@@ -32,7 +34,7 @@ function buildJsonLd(site: SiteContent["site"]) {
 }
 
 export default async function Home() {
-  const c = await getContent();
+  const [c, latest] = await Promise.all([getContent(), getPosts(3)]);
   const jsonLd = buildJsonLd(c.site);
   return (
     <>
@@ -49,6 +51,7 @@ export default async function Home() {
         <Process steps={c.steps} />
         <Fees fees={c.fees} />
         <Booking booking={c.booking} site={c.site} availability={c.availability} />
+        <LatestPosts posts={latest} />
       </main>
       <Footer site={c.site} />
     </>

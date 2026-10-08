@@ -76,6 +76,7 @@ export const nav = [
   { href: "#domaines", label: "Domaines" },
   { href: "#deroule", label: "Déroulé" },
   { href: "#honoraires", label: "Honoraires" },
+  { href: "/actualites", label: "Actualités" },
   { href: "#rendez-vous", label: "Contact" },
 ] as const;
 

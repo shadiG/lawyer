@@ -19,6 +19,7 @@ Menu **Contenu** :
 | --- | --- |
 | mon nom, mon titre, ma photo, mon adresse, mon téléphone, mes horaires | **Cabinet** |
 | le titre et l'introduction de la page, les 3 atouts du bandeau bleu, ma présentation, les étapes, les honoraires | **Page d'accueil** (un onglet par section) |
+| un article du blog | **Articles** (voir « Publier un article » plus bas) |
 | les cartes « Domaines d'intervention » (ajouter, retirer, réordonner, ajouter une image) | **Domaines d'intervention** : le champ « Ordre d'affichage » trie les cartes ; « Image de la carte » est facultatif (format paysage) |
 | le SIRET, l'assurance, l'hébergeur (pages légales) | **Cabinet › Mentions légales** |
 
@@ -34,6 +35,21 @@ Menu **Rendez-vous › Demandes de rendez-vous**. Chaque demande du formulaire y
 - La **note interne** n'est visible que par vous.
 - Les informations du visiteur ne sont pas modifiables : elles restent fidèles à sa demande.
 - Supprimez les demandes anciennes selon la durée annoncée dans la politique de confidentialité.
+
+## Publier un article
+Dans **Contenu › Articles › Ajouter** :
+1. Saisissez le **titre** et un **résumé** (une à deux phrases : il s'affiche dans la liste et dans les résultats de recherche).
+2. Ajoutez, si vous voulez, une **image à la une** (format paysage).
+3. Rédigez dans l'éditeur, qui fonctionne comme un traitement de texte : **intertitres**, gras, italique, listes, citations, liens et images (barre d'outils au-dessus du texte, ou tapez « / »).
+4. Dans la boîte « Options » : le **domaine concerné** (affiché comme catégorie), la **date de publication** (modifiable) et l'**adresse** de l'article, générée depuis le titre.
+5. **Enregistrer le brouillon** garde l'article invisible sur le site ; **Publier** le met en ligne tout de suite.
+
+Bon à savoir :
+- L'article apparaît dans la page **Actualités**, dans les trois derniers articles de l'accueil, dans le plan du site et dans le **flux RSS** (`/actualites/rss.xml`).
+- Changer le titre ne change pas l'adresse : les liens déjà partagés restent valides.
+- Pour retirer un article du site sans le supprimer, repassez-le en brouillon (action « Annuler la publication » du bouton de publication).
+- Les liens dangereux (par exemple `javascript:`) sont automatiquement neutralisés à l'affichage.
+- Un article d'exemple, « Bienvenue sur le blog du cabinet », est fourni : modifiez-le ou supprimez-le.
 
 ## Traiter une demande de rendez-vous
 Dans **Rendez-vous › Demandes de rendez-vous**, ouvrez une demande, puis dans la boîte « Options » :

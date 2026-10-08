@@ -1,13 +1,21 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
 import { nav, type SiteContent } from "../_lib/content";
 import { Mail, Phone, Scales } from "./icons";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 
 type Site = SiteContent["site"];
+
+/** Lien interne : `<Link>` (navigation sans rechargement) pour les chemins, `<a>` pour les ancres. */
+function Anchor({ href = "", ...rest }: ComponentProps<"a">) {
+  return href.startsWith("/") ? <Link href={href} prefetch={false} {...rest} /> : <a href={href} {...rest} />;
+}
+const MotionAnchor = motion.create(Anchor);
 
 function Logo({ site, className = "" }: { site: Site; className?: string }) {
   return (
@@ -22,9 +30,10 @@ function Logo({ site, className = "" }: { site: Site; className?: string }) {
 }
 
 /** Section visible à l'écran, pour souligner l'entrée de menu correspondante. */
-function useActiveSection() {
+function useActiveSection(enabled: boolean) {
   const [active, setActive] = useState("#top");
   useEffect(() => {
+    if (!enabled) return;
     const ids = nav.map((n) => n.href.slice(1));
     const els = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null);
     const io = new IntersectionObserver(
@@ -35,16 +44,19 @@ function useActiveSection() {
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
+  }, [enabled]);
   return active;
 }
 
-export function Nav({ site }: { site: Site }) {
+/** `home` : vrai sur la page d'accueil (ancres + défilement doux), faux ailleurs (liens vers l'accueil). */
+export function Nav({ site, home = true }: { site: Site; home?: boolean }) {
   const [open, setOpen] = useState(false);
   const [stuck, setStuck] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
   const burger = useRef<HTMLButtonElement>(null);
-  const active = useActiveSection();
+  const pathname = usePathname();
+  const sectionActive = useActiveSection(home);
+  const active = home ? sectionActive : pathname.startsWith("/actualites") ? "/actualites" : "";
 
   // La barre compacte apparaît quand l'en-tête complet a quitté l'écran.
   useEffect(() => {
@@ -82,13 +94,20 @@ export function Nav({ site }: { site: Site }) {
     };
   }, [open]);
 
-  const link = (href: string) => ({
-    href,
-    onClick: (e: React.MouseEvent) => {
-      e.preventDefault();
-      goTo(href);
-    },
-  });
+  const link = (href: string) => {
+    // Une autre page du site : navigation normale.
+    if (href.startsWith("/")) return { href, onClick: () => setOpen(false) };
+    // Une ancre depuis une page qui n'est pas l'accueil : on retourne à l'accueil, à cette ancre.
+    if (!home) return { href: `/${href}`, onClick: () => setOpen(false) };
+    // Une ancre de l'accueil : défilement doux.
+    return {
+      href,
+      onClick: (e: React.MouseEvent) => {
+        e.preventDefault();
+        goTo(href);
+      },
+    };
+  };
 
   return (
     <header>
@@ -103,17 +122,17 @@ export function Nav({ site }: { site: Site }) {
               paddingLeft: "max(2rem, calc((100vw - 80rem) / 2 + 2rem))",
             }}
           >
-            <a {...link("#top")} aria-label={`${site.name}, accueil`} className="press">
+            <Anchor {...link("#top")} aria-label={`${site.name}, accueil`} className="press">
               <Logo site={site} />
-            </a>
+            </Anchor>
           </div>
 
           <div className="flex flex-1 flex-col justify-center pr-[max(2rem,calc((100vw-80rem)/2+2rem))] pl-10">
             <div className="flex items-center justify-between border-b border-ink/10 pb-2.5 text-xs text-ink-soft">
               <ul className="flex gap-5">
-                <li><a {...link("#top")} className="link-draw hover:text-ink">Accueil</a></li>
-                <li><a {...link("#cabinet")} className="link-draw hover:text-ink">Le cabinet</a></li>
-                <li><a {...link("#rendez-vous")} className="link-draw hover:text-ink">Contact</a></li>
+                <li><Anchor {...link("#top")} className="link-draw hover:text-ink">Accueil</Anchor></li>
+                <li><Anchor {...link("#cabinet")} className="link-draw hover:text-ink">Le cabinet</Anchor></li>
+                <li><Anchor {...link("#rendez-vous")} className="link-draw hover:text-ink">Contact</Anchor></li>
               </ul>
               <p>{site.barreau}</p>
             </div>
@@ -136,12 +155,12 @@ export function Nav({ site }: { site: Site }) {
                   <span className="block text-xs text-ink-soft">{site.email}</span>
                 </span>
               </a>
-              <a
+              <Anchor
                 {...link("#rendez-vous")}
                 className="press bg-brass px-6 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white transition-colors duration-200 hover:bg-brass-dark"
               >
                 Prendre rendez-vous
-              </a>
+              </Anchor>
             </div>
           </div>
         </div>
@@ -152,13 +171,13 @@ export function Nav({ site }: { site: Site }) {
             <ul className="mx-auto flex max-w-7xl items-center gap-1 px-8 text-[0.8rem] font-semibold text-white/85">
               {nav.map((item) => (
                 <li key={item.href} className="relative">
-                  <a
+                  <Anchor
                     {...link(item.href)}
                     aria-current={active === item.href ? "location" : undefined}
                     className={`block px-4 py-4 transition-colors duration-200 hover:text-white ${active === item.href ? "text-brass-bright" : ""}`}
                   >
                     {item.label}
-                  </a>
+                  </Anchor>
                   {active === item.href ? (
                     <motion.span
                       layoutId="nav-underline"
@@ -183,32 +202,32 @@ export function Nav({ site }: { site: Site }) {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
-          <a {...link("#top")} aria-label={`${site.name}, retour en haut`} className="press">
+          <Anchor {...link("#top")} aria-label={`${site.name}, retour en haut`} className="press">
             <Logo site={site} className="[&_svg]:text-[2rem] [&_.display]:text-[1.3rem]" />
-          </a>
+          </Anchor>
 
           <ul className="hidden items-center gap-1 text-[0.8rem] font-semibold text-white/85 lg:flex" aria-label="Navigation compacte">
             {nav.map((item) => (
               <li key={item.href}>
-                <a
+                <Anchor
                   {...link(item.href)}
                   tabIndex={stuck ? 0 : -1}
                   className={`block px-3 py-2 transition-colors duration-200 hover:text-white ${active === item.href ? "text-brass-bright" : ""}`}
                 >
                   {item.label}
-                </a>
+                </Anchor>
               </li>
             ))}
           </ul>
 
           <div className="flex items-center gap-3">
-            <a
+            <Anchor
               {...link("#rendez-vous")}
               tabIndex={stuck ? 0 : undefined}
               className="press hidden bg-brass px-5 py-2.5 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white transition-colors duration-200 hover:bg-brass-dark sm:block"
             >
               Rendez-vous
-            </a>
+            </Anchor>
             <button
               ref={burger}
               type="button"
@@ -255,7 +274,7 @@ export function Nav({ site }: { site: Site }) {
             <ul>
               {nav.map((item, i) => (
                 <li key={item.href} className="overflow-hidden border-b border-white/10">
-                  <motion.a
+                  <MotionAnchor
                     {...link(item.href)}
                     className={`display block py-3.5 text-[2rem] ${active === item.href ? "text-brass-bright" : ""}`}
                     initial={{ y: "100%", opacity: 0 }}
@@ -264,7 +283,7 @@ export function Nav({ site }: { site: Site }) {
                     transition={{ duration: 0.55, ease: EASE, delay: 0.06 + i * 0.05 }}
                   >
                     {item.label}
-                  </motion.a>
+                  </MotionAnchor>
                 </li>
               ))}
             </ul>
@@ -274,12 +293,12 @@ export function Nav({ site }: { site: Site }) {
               transition={{ duration: 0.5, ease: EASE, delay: 0.35 }}
               className="space-y-4"
             >
-              <a
+              <Anchor
                 {...link("#rendez-vous")}
                 className="press block bg-brass px-6 py-4 text-center text-sm font-semibold uppercase tracking-[0.12em] text-white"
               >
                 Prendre rendez-vous
-              </a>
+              </Anchor>
               <a href={`tel:${site.phoneHref}`} className="flex items-center justify-center gap-2 py-2 text-white/80">
                 <Phone /> {site.phone}
               </a>
