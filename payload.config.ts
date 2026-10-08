@@ -29,8 +29,36 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     dateFormat: "dd/MM/yyyy HH:mm",
     meta: { titleSuffix: " · Administration du cabinet" },
+    // Habillage « WordPress » : barre noire, menu latéral, tableau de bord.
+    components: {
+      header: ["/cms/components/AdminBar#AdminBar"],
+      beforeNavLinks: ["/cms/components/NavTop#NavTop", "/cms/components/KeepNavOpen#KeepNavOpen"],
+      graphics: {
+        Logo: "/cms/components/Logo#Logo",
+        Icon: "/cms/components/Icon#Icon",
+      },
+      views: { dashboard: { Component: "/cms/components/Dashboard#Dashboard" } },
+    },
   },
-  i18n: { supportedLanguages: { fr }, fallbackLanguage: "fr" },
+  i18n: {
+    supportedLanguages: { fr },
+    fallbackLanguage: "fr",
+    // Libellés plus naturels que « Créer un(e) nouveau ou nouvelle ».
+    translations: {
+      fr: {
+        general: {
+          createNew: "Ajouter",
+          addNew: "Ajouter",
+          save: "Enregistrer",
+          saveChanges: "Enregistrer les modifications",
+          perPage: "Par page : {{limit}}",
+        },
+        fields: {
+          chooseFromExisting: "Choisir dans la médiathèque",
+        },
+      },
+    },
+  },
   collections: [Bookings, Practices, Media, Users],
   globals: [Settings, Home],
   editor: lexicalEditor(),
