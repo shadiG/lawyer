@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { nav, site } from "../_lib/content";
+import { nav, siteYear, type SiteContent } from "../_lib/content";
 
-export function Footer() {
+export function Footer({ site }: { site: SiteContent["site"] }) {
   return (
     <footer className="on-night mx-2 mb-2 rounded-[2rem] bg-night text-paper md:mx-4 md:mb-4 md:rounded-[3rem]">
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-20 md:px-8 md:pt-28">
@@ -40,7 +40,7 @@ export function Footer() {
 
         <div className="mt-20 flex flex-col gap-6 border-t border-paper/12 pt-8 text-sm text-paper/55 md:flex-row md:items-center md:justify-between">
           <p>
-            © {site.year} {site.lawyer}. Tous droits réservés.
+            © {siteYear} {site.lawyer}. Tous droits réservés.
           </p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {nav.map((n) => (

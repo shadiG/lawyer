@@ -1,8 +1,8 @@
-import { about } from "../_lib/content";
+import type { SiteContent } from "../_lib/content";
 import { Eyebrow } from "./button";
 import { Reveal, SplitHeading } from "./reveal";
 
-export function About() {
+export function About({ about }: { about: SiteContent["about"] }) {
   return (
     <section id="cabinet" className="mx-auto max-w-7xl px-4 py-28 md:px-8 md:py-40">
       <div className="grid gap-12 md:grid-cols-12 md:gap-8">

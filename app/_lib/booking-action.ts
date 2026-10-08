@@ -1,12 +1,15 @@
 "use server";
 
+import config from "@payload-config";
 import { headers } from "next/headers";
+import { getPayload } from "payload";
 import { Resend } from "resend";
-import { booking, site } from "./content";
+import { getContent } from "./cms";
+import { bookingModes, bookingWindows } from "./content";
 import { bookingSchema, type BookingField, type BookingState } from "./booking-schema";
 
 // Limitation de débit en mémoire : suffisante pour une instance unique
-// (un conteneur Coolify). À remplacer par un store partagé si l’on scale.
+// (un conteneur Coolify). À remplacer par un store partagé si l'on scale.
 const hits = new Map<string, number[]>();
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_HITS = 3;
@@ -20,7 +23,7 @@ function tooMany(ip: string) {
   return recent.length > MAX_HITS;
 }
 
-const label = <T extends readonly { value: string; label: string }[]>(list: T, value: string) =>
+const label = (list: readonly { value: string; label: string }[], value: string) =>
   list.find((i) => i.value === value)?.label ?? value;
 
 function formatDay(iso: string) {
@@ -51,7 +54,7 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
     ),
   ) as Record<BookingField, string>;
 
-  // Robot détecté : on répond « succès » sans rien envoyer.
+  // Robot détecté : on répond « succès » sans rien enregistrer ni envoyer.
   if (raw.website) return { status: "success" };
 
   const parsed = bookingSchema.safeParse(raw);
@@ -69,6 +72,8 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
     return { status: "error", errors: { day: "Ce jour n’est plus disponible, choisissez-en un autre." }, values: raw };
   }
 
+  const { site } = await getContent();
+
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
   if (tooMany(ip)) {
@@ -79,6 +84,30 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
     };
   }
 
+  // 1) Persistance dans l'administration : la source de vérité.
+  let saved = false;
+  try {
+    const payload = await getPayload({ config });
+    await payload.create({
+      collection: "bookings",
+      data: {
+        status: "nouveau",
+        name: oneLine(data.name),
+        email: data.email,
+        phone: data.phone || undefined,
+        motif: data.motif,
+        mode: data.mode as "cabinet" | "visio" | "telephone",
+        day: data.day,
+        window: data.window as "matin" | "apres-midi" | "fin-journee",
+        message: data.message || undefined,
+      },
+    });
+    saved = true;
+  } catch (err) {
+    console.error("Échec d’enregistrement de la demande de rendez-vous :", err);
+  }
+
+  // 2) Notification par e-mail : filet de sécurité et confort.
   const subject = `Demande de rendez-vous · ${oneLine(data.name)} · ${formatDay(data.day)}`;
   const text = [
     "Nouvelle demande de rendez-vous reçue depuis le site.",
@@ -87,9 +116,9 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
     `E-mail : ${data.email}`,
     `Téléphone : ${data.phone || "non renseigné"}`,
     `Sujet : ${data.motif}`,
-    `Mode : ${label(booking.modes, data.mode)}`,
+    `Mode : ${label(bookingModes, data.mode)}`,
     `Jour souhaité : ${formatDay(data.day)}`,
-    `Moment : ${label(booking.windows, data.window)}`,
+    `Moment : ${label(bookingWindows, data.window)}`,
     "",
     "Message :",
     data.message || "(aucun)",
@@ -98,38 +127,27 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.BOOKING_TO_EMAIL;
   const from = process.env.BOOKING_FROM_EMAIL;
+  let mailed = false;
 
-  if (!apiKey || !to || !from) {
-    if (process.env.NODE_ENV !== "production") {
-      // En développement : on affiche la demande au lieu de l’envoyer.
-      console.log(`\n--- Demande de rendez-vous (mode développement) ---\n${subject}\n\n${text}\n`);
-      return { status: "success" };
+  if (apiKey && to && from) {
+    try {
+      const { error } = await new Resend(apiKey).emails.send({ from, to, replyTo: data.email, subject, text });
+      if (error) throw new Error(error.message);
+      mailed = true;
+    } catch (err) {
+      console.error("Échec d’envoi de l’e-mail de rendez-vous :", err);
     }
-    console.error("Réservation impossible : RESEND_API_KEY, BOOKING_TO_EMAIL ou BOOKING_FROM_EMAIL manquant.");
-    return {
-      status: "error",
-      message: `L’envoi en ligne est momentanément indisponible. Merci d’appeler le ${site.phone}.`,
-      values: raw,
-    };
+  } else if (process.env.NODE_ENV !== "production") {
+    console.log(`\n--- Demande de rendez-vous (mode développement) ---\n${subject}\n\n${text}\n`);
+    mailed = true;
   }
 
-  try {
-    const { error } = await new Resend(apiKey).emails.send({
-      from,
-      to,
-      replyTo: data.email,
-      subject,
-      text,
-    });
-    if (error) throw new Error(error.message);
-  } catch (err) {
-    console.error("Échec d’envoi de la demande de rendez-vous :", err);
-    return {
-      status: "error",
-      message: `Votre demande n’a pas pu être envoyée. Réessayez ou appelez le ${site.phone}.`,
-      values: raw,
-    };
-  }
+  // Succès dès que la demande est quelque part où l'avocat la verra.
+  if (saved || mailed) return { status: "success" };
 
-  return { status: "success" };
+  return {
+    status: "error",
+    message: `Votre demande n’a pas pu être enregistrée. Réessayez ou appelez le ${site.phone}.`,
+    values: raw,
+  };
 }

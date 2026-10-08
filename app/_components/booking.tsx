@@ -1,10 +1,10 @@
-import { booking, site } from "../_lib/content";
+import type { SiteContent } from "../_lib/content";
 import { BookingForm } from "./booking-form";
 import { Eyebrow } from "./button";
 import { Clock, Mail, Phone, Pin, Shield } from "./icons";
 import { Reveal, SplitHeading } from "./reveal";
 
-export function Booking() {
+export function Booking({ booking, site }: { booking: SiteContent["booking"]; site: SiteContent["site"] }) {
   return (
     <section id="rendez-vous" className="bg-paper-deep">
       <div className="mx-auto grid max-w-7xl gap-14 px-4 py-28 md:grid-cols-12 md:gap-8 md:px-8 md:py-40">
@@ -58,7 +58,7 @@ export function Booking() {
           <Reveal>
             <div className="rounded-[2.25rem] bg-ink/[0.05] p-2 ring-1 ring-ink/10">
               <div className="relative rounded-[calc(2.25rem-0.5rem)] bg-paper-card p-6 shadow-[inset_0_1px_0_rgb(255_255_255/0.85)] sm:p-9">
-                <BookingForm />
+                <BookingForm motifs={booking.motifs} />
               </div>
             </div>
           </Reveal>

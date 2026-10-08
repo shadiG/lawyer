@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
-import { hero, site } from "../_lib/content";
+import type { SiteContent } from "../_lib/content";
 import { Button, Eyebrow } from "./button";
 import { Clock, Shield } from "./icons";
 import { Portrait } from "./portrait";
@@ -10,7 +10,7 @@ import { SplitHeading } from "./reveal";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 
-export function Hero() {
+export function Hero({ hero, site }: { hero: SiteContent["hero"]; site: SiteContent["site"] }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   // Parallaxe légère : le portrait remonte moins vite que la page.
@@ -89,7 +89,7 @@ export function Hero() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 1.2, ease: EASE, delay: 0.2 }}
       >
-        <Portrait className="aspect-[4/5.4] w-full" />
+        <Portrait site={site} className="aspect-[4/5.4] w-full" />
         <div className="glass absolute -bottom-5 -left-3 rounded-2xl bg-paper/80 px-5 py-4 shadow-[0_18px_50px_-18px_rgb(20_24_29/0.3),inset_0_1px_0_rgb(255_255_255/0.7)] ring-1 ring-ink/10 backdrop-blur-xl md:-left-10">
           <p className="text-[0.65rem] uppercase tracking-[0.2em] text-ink-faint">Consultations</p>
           <p className="mt-1 text-sm text-ink">Au cabinet, en visio ou par téléphone</p>

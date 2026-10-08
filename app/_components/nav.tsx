@@ -2,12 +2,12 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { nav, site } from "../_lib/content";
+import { nav, type SiteContent } from "../_lib/content";
 import { Phone } from "./icons";
 
 const EASE = [0.32, 0.72, 0, 1] as const;
 
-export function Nav() {
+export function Nav({ site }: { site: SiteContent["site"] }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const burger = useRef<HTMLButtonElement>(null);

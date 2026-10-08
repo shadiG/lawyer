@@ -5,7 +5,7 @@ import { useActionState, useState, useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
 import { submitBooking } from "../_lib/booking-action";
 import { initialBookingState, type BookingField, type BookingState } from "../_lib/booking-schema";
-import { booking } from "../_lib/content";
+import { bookingModes, bookingWindows } from "../_lib/content";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 
@@ -142,7 +142,7 @@ function Submit() {
 
 /* ---------- formulaire ---------- */
 
-function Form({ onDone }: { onDone: () => void }) {
+function Form({ motifs, onDone }: { motifs: string[]; onDone: () => void }) {
   const [state, action] = useActionState<BookingState, FormData>(submitBooking, initialBookingState);
   const mounted = useMounted();
   const [days] = useState<Day[]>(() => (typeof window === "undefined" ? [] : upcomingDays()));
@@ -187,12 +187,12 @@ function Form({ onDone }: { onDone: () => void }) {
       <ChipGroup
         legend="Sujet de votre demande"
         name="motif"
-        options={booking.motifs.map((m) => ({ value: m, label: m }))}
+        options={motifs.map((m) => ({ value: m, label: m }))}
         defaultValue={v.motif}
         error={err("motif")}
       />
 
-      <ChipGroup legend="Mode de rendez-vous" name="mode" options={[...booking.modes]} defaultValue={v.mode} error={err("mode")} />
+      <ChipGroup legend="Mode de rendez-vous" name="mode" options={[...bookingModes]} defaultValue={v.mode} error={err("mode")} />
 
       <fieldset aria-describedby="day-error" className="min-w-0">
         <legend className="mb-2 text-sm font-medium text-ink">Jour souhaité</legend>
@@ -213,7 +213,7 @@ function Form({ onDone }: { onDone: () => void }) {
         <FieldError id="day-error" error={err("day")} />
       </fieldset>
 
-      <ChipGroup legend="Moment de la journée" name="window" options={[...booking.windows]} defaultValue={v.window} error={err("window")} />
+      <ChipGroup legend="Moment de la journée" name="window" options={[...bookingWindows]} defaultValue={v.window} error={err("window")} />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="name" label="Nom et prénom" error={err("name")}>
@@ -275,8 +275,8 @@ function Success({ onDone }: { onDone: () => void }) {
   );
 }
 
-export function BookingForm() {
+export function BookingForm({ motifs }: { motifs: string[] }) {
   // Changer la clé remonte un formulaire vierge après un succès.
   const [key, setKey] = useState(0);
-  return <Form key={key} onDone={() => setKey((k) => k + 1)} />;
+  return <Form key={key} motifs={motifs} onDone={() => setKey((k) => k + 1)} />;
 }

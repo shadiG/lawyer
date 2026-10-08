@@ -2,11 +2,11 @@
 
 import { motion, useScroll, useSpring } from "motion/react";
 import { useRef } from "react";
-import { steps } from "../_lib/content";
+import type { SiteContent } from "../_lib/content";
 import { Eyebrow } from "./button";
 import { Reveal, SplitHeading } from "./reveal";
 
-export function Process() {
+export function Process({ steps }: { steps: SiteContent["steps"] }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 70%", "end 55%"] });
   // Le ressort lisse le défilement : la ligne « rattrape » le doigt sans saccade.
@@ -41,14 +41,14 @@ export function Process() {
           </div>
 
           <ol className="space-y-16 md:space-y-28">
-            {steps.map((step) => (
-              <li key={step.n} className="relative grid gap-4 pl-12 md:grid-cols-12 md:gap-8 md:pl-0">
+            {steps.map((step, i) => (
+              <li key={step.title} className="relative grid gap-4 pl-12 md:grid-cols-12 md:gap-8 md:pl-0">
                 <span
                   aria-hidden="true"
                   className="absolute left-[0.7rem] top-3 size-2.5 rounded-full bg-night ring-2 ring-brass-bright md:left-[calc(16.666%-0.3rem)]"
                 />
                 <Reveal className="md:col-span-2 md:pr-10 md:text-right">
-                  <span className="display text-[clamp(3rem,6vw,5rem)] text-brass-bright">{step.n}</span>
+                  <span className="display text-[clamp(3rem,6vw,5rem)] text-brass-bright">{String(i + 1).padStart(2, "0")}</span>
                 </Reveal>
                 <Reveal delay={0.08} className="md:col-span-7 md:col-start-4">
                   <h3 className="display text-[clamp(1.75rem,3.2vw,2.75rem)]">{step.title}</h3>

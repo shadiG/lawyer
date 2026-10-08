@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { practices, type PracticeIcon } from "../_lib/content";
+import type { PracticeIcon, SiteContent } from "../_lib/content";
 import { Button, Eyebrow } from "./button";
 import { Family, Property, Scales, Work } from "./icons";
 import { Reveal, SplitHeading } from "./reveal";
@@ -16,7 +16,7 @@ const icons: Record<PracticeIcon, React.ComponentType<{ className?: string }>> =
 // Bento asymétrique : 7/5 puis 5/7 sur grand écran, pile sur mobile.
 const spans = ["md:col-span-7", "md:col-span-5", "md:col-span-5", "md:col-span-7"];
 
-function Card({ practice, className }: { practice: (typeof practices)[number]; className: string }) {
+function Card({ practice, className }: { practice: SiteContent["practices"][number]; className: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const Icon = icons[practice.icon];
 
@@ -66,7 +66,7 @@ function Card({ practice, className }: { practice: (typeof practices)[number]; c
   );
 }
 
-export function Practices() {
+export function Practices({ practices }: { practices: SiteContent["practices"] }) {
   return (
     <section id="domaines" className="mx-auto max-w-7xl px-4 pb-28 md:px-8 md:pb-40">
       <div className="mb-14 max-w-3xl md:mb-20">

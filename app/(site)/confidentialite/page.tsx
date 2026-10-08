@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { LegalPage } from "../_components/legal-page";
-import { site } from "../_lib/content";
+import { LegalPage } from "../../_components/legal-page";
+import { getContent } from "../../_lib/cms";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
   alternates: { canonical: "/confidentialite" },
 };
 
-// ⚠️ À faire valider par l’avocat : texte provisoire conforme à l’architecture actuelle du site.
-export default function Page() {
+// ⚠️ Texte à faire valider par l'avocat : il décrit l'architecture actuelle du site.
+export default async function Page() {
+  const { site, legal } = await getContent();
   return (
-    <LegalPage title="Politique de confidentialité" updated="[à compléter]">
+    <LegalPage site={site} title="Politique de confidentialité" updated={legal.updated}>
       <section>
         <h2>Responsable du traitement</h2>
         <p>
@@ -42,20 +43,24 @@ export default function Page() {
       <section>
         <h2>Durée de conservation</h2>
         <p>
-          Si aucun dossier n’est ouvert, vos données sont supprimées au plus tard [durée, ex. 12 mois] après le dernier
+          Si aucun dossier n’est ouvert, vos données sont supprimées au plus tard {legal.retention} après le dernier
           échange. Si un dossier est ouvert, elles sont conservées selon les obligations professionnelles de l’avocat.
         </p>
       </section>
       <section>
-        <h2>Destinataires</h2>
+        <h2>Destinataires et hébergement</h2>
         <p>
-          Seul le cabinet accède à votre demande. Elle transite par un prestataire d’envoi d’e-mails (Resend) agissant
-          comme sous-traitant. Aucune donnée n’est vendue ni utilisée à des fins publicitaires.
+          Votre demande est enregistrée sur le serveur du cabinet et notifiée par e-mail via un prestataire d’envoi
+          (Resend) agissant comme sous-traitant. Seul le cabinet y accède. Aucune donnée n’est vendue ni utilisée à
+          des fins publicitaires.
         </p>
       </section>
       <section>
         <h2>Cookies et mesure d’audience</h2>
-        <p>Ce site n’utilise aucun traceur publicitaire et ne dépose aucun cookie nécessitant votre consentement.</p>
+        <p>
+          Le site public n’utilise aucun traceur publicitaire ni cookie nécessitant votre consentement. Un cookie
+          technique de session est déposé uniquement pour les personnes qui se connectent à l’espace d’administration.
+        </p>
       </section>
       <section>
         <h2>Vos droits</h2>

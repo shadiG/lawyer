@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Instrument_Serif } from "next/font/google";
-import { site } from "./_lib/content";
-import { Providers } from "./_components/providers";
-import "./globals.css";
+import { getContent } from "../_lib/cms";
+import { siteUrl } from "../_lib/content";
+import { Providers } from "../_components/providers";
+import "../globals.css";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -18,26 +19,24 @@ const instrumentSerif = Instrument_Serif({
   display: "swap",
 });
 
-const description =
-  "Avocate à Paris en droit de la famille, du travail, pénal et immobilier. Conseil clair, accompagnement rigoureux. Demandez un rendez-vous en ligne.";
-
-export const metadata: Metadata = {
-  metadataBase: new URL(site.url),
-  title: {
-    default: `${site.lawyer} · ${site.title}`,
-    template: `%s · ${site.name}`,
-  },
-  description,
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    locale: "fr_FR",
-    siteName: site.name,
-    title: `${site.lawyer} · ${site.title}`,
+export async function generateMetadata(): Promise<Metadata> {
+  const { site, hero } = await getContent();
+  const description = `${site.title}. ${hero.lead}`.slice(0, 280);
+  return {
+    metadataBase: new URL(siteUrl),
+    title: { default: `${site.lawyer} · ${site.title}`, template: `%s · ${site.name}` },
     description,
-  },
-  robots: { index: true, follow: true },
-};
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      locale: "fr_FR",
+      siteName: site.name,
+      title: `${site.lawyer} · ${site.title}`,
+      description,
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#f5f0e6",
