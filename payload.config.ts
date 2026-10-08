@@ -28,6 +28,11 @@ export default buildConfig({
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     dateFormat: "dd/MM/yyyy HH:mm",
+    // Habillage WordPress = thème clair uniquement (sinon l'OS en mode sombre
+    // bascule Payload en sombre et mélange les deux palettes).
+    theme: "light",
+    // Des extensions de navigateur (Grammarly…) modifient <html>/<body> avant React.
+    suppressHydrationWarning: true,
     meta: { titleSuffix: " · Administration du cabinet" },
     // Habillage « WordPress » : barre noire, menu latéral, tableau de bord.
     components: {
