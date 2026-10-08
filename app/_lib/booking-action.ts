@@ -3,9 +3,11 @@
 import config from "@payload-config";
 import { headers } from "next/headers";
 import { getPayload } from "payload";
-import { Resend } from "resend";
+import { isDayAvailable, todayParis } from "./availability";
+import { acknowledgementEmail } from "./booking-emails";
 import { getContent } from "./cms";
 import { bookingModes, bookingWindows } from "./content";
+import { sendMail } from "./mail";
 import { bookingSchema, type BookingField, type BookingState } from "./booking-schema";
 
 // Limitation de débit en mémoire : suffisante pour une instance unique
@@ -36,15 +38,6 @@ function formatDay(iso: string) {
   }).format(new Date(`${iso}T12:00:00Z`));
 }
 
-/** Un jour ouvré (lun.–ven.) dans les 90 prochains jours. */
-function validDay(iso: string) {
-  const date = new Date(`${iso}T12:00:00Z`);
-  if (Number.isNaN(date.getTime())) return false;
-  const dow = date.getUTCDay();
-  const diff = (date.getTime() - Date.now()) / 86_400_000;
-  return dow !== 0 && dow !== 6 && diff > -1 && diff < 90;
-}
-
 const oneLine = (s: string) => s.replace(/[\r\n]+/g, " ").trim();
 
 export async function submitBooking(_prev: BookingState, formData: FormData): Promise<BookingState> {
@@ -68,11 +61,12 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
   }
   const data = parsed.data;
 
-  if (!validDay(data.day)) {
+  const content = await getContent();
+  const { site, availability } = content;
+
+  if (!isDayAvailable(data.day, availability, todayParis())) {
     return { status: "error", errors: { day: "Ce jour n’est plus disponible, choisissez-en un autre." }, values: raw };
   }
-
-  const { site } = await getContent();
 
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
@@ -124,26 +118,26 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
     data.message || "(aucun)",
   ].join("\n");
 
-  const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.BOOKING_TO_EMAIL;
-  const from = process.env.BOOKING_FROM_EMAIL;
   let mailed = false;
 
-  if (apiKey && to && from) {
-    try {
-      const { error } = await new Resend(apiKey).emails.send({ from, to, replyTo: data.email, subject, text });
-      if (error) throw new Error(error.message);
-      mailed = true;
-    } catch (err) {
-      console.error("Échec d’envoi de l’e-mail de rendez-vous :", err);
-    }
+  if (to) {
+    const r = await sendMail({ to, replyTo: data.email, subject, text });
+    mailed = r.status === "sent" || r.status === "logged";
+    if (r.status === "failed") console.error("Échec d’envoi de l’e-mail de rendez-vous :", r.error);
   } else if (process.env.NODE_ENV !== "production") {
     console.log(`\n--- Demande de rendez-vous (mode développement) ---\n${subject}\n\n${text}\n`);
     mailed = true;
   }
 
   // Succès dès que la demande est quelque part où l'avocat la verra.
-  if (saved || mailed) return { status: "success" };
+  if (saved || mailed) {
+    // Accusé de réception au client : un échec ne doit jamais faire échouer la demande.
+    const ack = acknowledgementEmail(site, { name: oneLine(data.name), day: data.day, window: data.window });
+    const r = await sendMail({ to: data.email, replyTo: site.email, ...ack });
+    if (r.status === "failed") console.error("Échec de l’accusé de réception :", r.error);
+    return { status: "success" };
+  }
 
   return {
     status: "error",

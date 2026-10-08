@@ -62,6 +62,69 @@ export const Settings: GlobalConfig = {
           ],
         },
         {
+          label: "Disponibilités",
+          description: "Jours proposés aux visiteurs dans le formulaire de rendez-vous.",
+          fields: [
+            {
+              name: "availability",
+              type: "group",
+              label: "Disponibilités",
+              fields: [
+                {
+                  name: "weekdays",
+                  type: "select",
+                  hasMany: true,
+                  label: "Jours de consultation",
+                  defaultValue: ["1", "2", "3", "4", "5"],
+                  options: [
+                    { label: "Lundi", value: "1" },
+                    { label: "Mardi", value: "2" },
+                    { label: "Mercredi", value: "3" },
+                    { label: "Jeudi", value: "4" },
+                    { label: "Vendredi", value: "5" },
+                    { label: "Samedi", value: "6" },
+                    { label: "Dimanche", value: "0" },
+                  ],
+                  admin: { description: "Les autres jours ne sont pas proposés." },
+                },
+                {
+                  name: "closedDates",
+                  type: "array",
+                  label: "Jours fermés (congés, jours fériés)",
+                  labels: { singular: "Jour fermé", plural: "Jours fermés" },
+                  fields: [
+                    {
+                      name: "date",
+                      type: "date",
+                      label: "Date",
+                      required: true,
+                      admin: { date: { pickerAppearance: "dayOnly", displayFormat: "dd/MM/yyyy" } },
+                    },
+                    { name: "reason", type: "text", label: "Motif (usage interne)" },
+                  ],
+                },
+                {
+                  name: "minNoticeDays",
+                  type: "number",
+                  label: "Délai minimum (jours)",
+                  defaultValue: 1,
+                  min: 0,
+                  max: 30,
+                  admin: { description: "0 = le jour même peut être proposé ; 1 = à partir de demain ; 2 = à partir d’après-demain…" },
+                },
+                {
+                  name: "daysShown",
+                  type: "number",
+                  label: "Nombre de jours proposés",
+                  defaultValue: 12,
+                  min: 3,
+                  max: 30,
+                },
+              ],
+            },
+          ],
+        },
+        {
           label: "Mentions légales",
           description: "Alimente les pages « Mentions légales » et « Confidentialité ».",
           fields: [

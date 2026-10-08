@@ -11,6 +11,18 @@
 
 export type PracticeIcon = "family" | "work" | "criminal" | "property";
 
+/** Jours où l'on peut demander un rendez-vous (réglable dans l'admin). */
+export type Availability = {
+  /** Jours ouverts, 0 = dimanche … 6 = samedi. */
+  weekdays: number[];
+  /** Jours fermés (congés, jours fériés), au format AAAA-MM-JJ. */
+  closedDates: { date: string; reason: string }[];
+  /** Délai minimum avant le premier jour proposé (en jours). */
+  minNoticeDays: number;
+  /** Nombre de jours proposés dans le formulaire. */
+  daysShown: number;
+};
+
 export type SiteContent = {
   site: {
     name: string;
@@ -28,6 +40,7 @@ export type SiteContent = {
     portraitUrl: string | null;
     portraitAlt: string | null;
   };
+  availability: Availability;
   hero: { eyebrow: string; title: string; lead: string; highlights: { title: string; text: string }[] };
   about: {
     eyebrow: string;
@@ -63,6 +76,7 @@ export const nav = [
   { href: "#domaines", label: "Domaines" },
   { href: "#deroule", label: "Déroulé" },
   { href: "#honoraires", label: "Honoraires" },
+  { href: "/actualites", label: "Actualités" },
   { href: "#rendez-vous", label: "Contact" },
 ] as const;
 
@@ -108,6 +122,7 @@ export const defaultContent: SiteContent = {
     portraitUrl: null,
     portraitAlt: null,
   },
+  availability: { weekdays: [1, 2, 3, 4, 5], closedDates: [], minNoticeDays: 1, daysShown: 12 },
   hero: {
     eyebrow: "Avocate · Barreau de Paris",
     title: "Défendre vos droits, avec rigueur et humanité.",

@@ -7,6 +7,7 @@ import { buildConfig } from "payload";
 import sharp from "sharp";
 import { Bookings } from "./cms/collections/bookings";
 import { Media } from "./cms/collections/media";
+import { Posts } from "./cms/collections/posts";
 import { Practices } from "./cms/collections/practices";
 import { Users } from "./cms/collections/users";
 import { Home } from "./cms/globals/home";
@@ -57,6 +58,8 @@ export default buildConfig({
           save: "Enregistrer",
           saveChanges: "Enregistrer les modifications",
           perPage: "Par page : {{limit}}",
+          creatingNewLabel: "Création : {{label}}",
+          createNewLabel: "Ajouter : {{label}}",
         },
         fields: {
           chooseFromExisting: "Choisir dans la médiathèque",
@@ -64,7 +67,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Bookings, Practices, Media, Users],
+  collections: [Bookings, Posts, Practices, Media, Users],
   globals: [Settings, Home],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET ?? "",
