@@ -6,6 +6,14 @@ import config from '@payload-config'
 import { RootPage, generatePageMetadata } from '@payloadcms/next/views'
 import { importMap } from '../importMap'
 
+/**
+ * Ajout local (le reste du fichier est généré par Payload).
+ * L'admin est dynamique par nature (session, préférences) : on l'exempte de la
+ * validation « navigation instantanée » (dev uniquement), qui ne s'applique pas
+ * à lui. À conserver si Payload régénère ce fichier.
+ */
+export const instant = false
+
 type Args = {
   params: Promise<{
     segments: string[]
