@@ -1,26 +1,144 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ *
+ * Design tokens — « Editorial Luxury » : ivoire, encre, laiton.
+ * ------------------------------------------------------------------ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f5f0e6;
+  --paper-deep: #ece5d6;
+  --paper-card: #fbf8f1;
+  --ink: #14181d;
+  --ink-soft: #4b5058;
+  --ink-faint: #7d8087;
+  --night: #11161a;
+  --night-soft: #1a2127;
+  --brass: #7a5a32;
+  --brass-bright: #c3a074;
+  --hairline: rgb(20 24 29 / 0.1);
+  --hairline-night: rgb(245 240 230 / 0.12);
+
+  /* Easings (Emil / Apple) : sortie forte, jamais de ease-in ni de linear. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-paper-card: var(--paper-card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-night: var(--night);
+  --color-night-soft: var(--night-soft);
+  --color-brass: var(--brass);
+  --color-brass-bright: var(--brass-bright);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), "Iowan Old Style", Georgia, serif;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  background: var(--paper);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Titres : tracking serré et interligne court (Apple, typographie optique). */
+.display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  text-wrap: balance;
+}
+
+.prose-fr {
+  text-wrap: pretty;
+}
+
+/* Grain papier : couche fixe, jamais sur un conteneur qui défile. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Focus visible : anneau net, jamais supprimé. */
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.on-night :focus-visible {
+  outline-color: var(--brass-bright);
+}
+
+/* Lien souligné qui se dessine. */
+.link-draw {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 400ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .link-draw:hover {
+    background-size: 100% 1px;
+  }
+}
+
+/* Retour tactile immédiat sur tout ce qui se presse. */
+.press {
+  transition: transform 160ms var(--ease-out);
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Barre de défilement horizontale discrète. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mouvement réduit : on garde les fondus, on retire les déplacements. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .press:active {
+    transform: none;
+  }
+}
+
+/* Transparence réduite : surfaces pleines, sans flou. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    backdrop-filter: none !important;
+    background: var(--paper-card) !important;
+  }
 }

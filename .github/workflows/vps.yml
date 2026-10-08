@@ -1,0 +1,57 @@
+# Déploiement VPS (DEPLOY-1, DEPLOY-8). Procédure : docs/ops/vps.md
+# Un push sur main lance le CI, puis demande à Coolify de reconstruire.
+# Le run vert signifie que Coolify a accepté la demande, pas que le site est
+# en ligne : vérifier les URLs ensuite (DEPLOY-4).
+name: VPS deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vps-deploy
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  deploy:
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: vps
+    steps:
+      - name: Tell Coolify to redeploy
+        env:
+          COOLIFY_URL: ${{ vars.COOLIFY_URL || secrets.COOLIFY_URL }}
+          COOLIFY_RESOURCE_UUID: ${{ vars.COOLIFY_RESOURCE_UUID || secrets.COOLIFY_RESOURCE_UUID }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          if [ -z "$COOLIFY_URL" ] || [ -z "$COOLIFY_RESOURCE_UUID" ] || [ -z "$COOLIFY_TOKEN" ]; then
+            echo "::notice::Coolify n'est pas encore configuré (docs/ops/vps.md). Rien n'est déployé."
+            exit 0
+          fi
+          api="${COOLIFY_URL%/}/api/v1"
+          if ! curl --fail-with-body --silent --show-error --max-time 60 \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$api/deploy?uuid=$COOLIFY_RESOURCE_UUID&force=false"; then
+            # Un mauvais UUID et un jeton d'une autre équipe donnent le même
+            # « No resources found » : on montre ce que le jeton voit.
+            echo
+            echo "::error::Coolify n'a pas de ressource '$COOLIFY_RESOURCE_UUID' pour ce jeton."
+            apps="$(curl --silent --max-time 30 -H "Authorization: Bearer $COOLIFY_TOKEN" "$api/applications" \
+              | jq -r '.[]? | "  \(.name)  uuid=\(.uuid)"' || true)"
+            if [ -n "$apps" ]; then
+              echo "Applications que ce jeton peut déployer (COOLIFY_RESOURCE_UUID doit en être une) :"
+              echo "$apps"
+            else
+              echo "Ce jeton ne voit aucune application : créez-le dans l'équipe Coolify qui possède l'app."
+            fi
+            exit 1
+          fi
+          echo "Coolify a reçu la demande de déploiement de \`${GITHUB_SHA::7}\`." >> "$GITHUB_STEP_SUMMARY"
