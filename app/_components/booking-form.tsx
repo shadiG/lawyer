@@ -5,7 +5,8 @@ import { useActionState, useState, useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
 import { submitBooking } from "../_lib/booking-action";
 import { initialBookingState, type BookingField, type BookingState } from "../_lib/booking-schema";
-import { bookingModes, bookingWindows } from "../_lib/content";
+import { availableDays } from "../_lib/availability";
+import { bookingModes, bookingWindows, type Availability } from "../_lib/content";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 
@@ -21,25 +22,25 @@ const useMounted = () =>
 
 type Day = { value: string; weekday: string; day: string; month: string };
 
-function upcomingDays(count = 12): Day[] {
-  const out: Day[] = [];
+const pad = (n: number) => String(n).padStart(2, "0");
+const localIso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+/**
+ * Les prochains jours proposés, avec les mêmes règles que le serveur (module
+ * partagé `availability`) : jours ouverts, hors jours fermés, délai minimum.
+ */
+function upcomingDays(a: Availability): Day[] {
   const weekday = new Intl.DateTimeFormat("fr-FR", { weekday: "short" });
   const month = new Intl.DateTimeFormat("fr-FR", { month: "short" });
-  const d = new Date();
-  d.setHours(12, 0, 0, 0);
-  while (out.length < count) {
-    d.setDate(d.getDate() + 1);
-    const dow = d.getDay();
-    if (dow === 0 || dow === 6) continue;
-    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    out.push({
-      value: iso,
+  return availableDays(a, localIso(new Date())).map((value) => {
+    const d = new Date(`${value}T12:00:00`);
+    return {
+      value,
       weekday: weekday.format(d).replace(".", ""),
       day: String(d.getDate()),
       month: month.format(d).replace(".", ""),
-    });
-  }
-  return out;
+    };
+  });
 }
 
 /* ---------- briques de formulaire ---------- */
@@ -142,10 +143,10 @@ function Submit() {
 
 /* ---------- formulaire ---------- */
 
-function Form({ motifs, onDone }: { motifs: string[]; onDone: () => void }) {
+function Form({ motifs, availability, onDone }: { motifs: string[]; availability: Availability; onDone: () => void }) {
   const [state, action] = useActionState<BookingState, FormData>(submitBooking, initialBookingState);
   const mounted = useMounted();
-  const [days] = useState<Day[]>(() => (typeof window === "undefined" ? [] : upcomingDays()));
+  const [days] = useState<Day[]>(() => (typeof window === "undefined" ? [] : upcomingDays(availability)));
   const e = state.errors ?? {};
   const v = state.values ?? {};
   // Une erreur disparaît dès que l'on modifie le champ, jusqu'au prochain envoi.
@@ -275,8 +276,8 @@ function Success({ onDone }: { onDone: () => void }) {
   );
 }
 
-export function BookingForm({ motifs }: { motifs: string[] }) {
+export function BookingForm({ motifs, availability }: { motifs: string[]; availability: Availability }) {
   // Changer la clé remonte un formulaire vierge après un succès.
   const [key, setKey] = useState(0);
-  return <Form key={key} motifs={motifs} onDone={() => setKey((k) => k + 1)} />;
+  return <Form key={key} motifs={motifs} availability={availability} onDone={() => setKey((k) => k + 1)} />;
 }

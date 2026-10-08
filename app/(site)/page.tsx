@@ -48,7 +48,7 @@ export default async function Home() {
         <Practices practices={c.practices} />
         <Process steps={c.steps} />
         <Fees fees={c.fees} />
-        <Booking booking={c.booking} site={c.site} />
+        <Booking booking={c.booking} site={c.site} availability={c.availability} />
       </main>
       <Footer site={c.site} />
     </>

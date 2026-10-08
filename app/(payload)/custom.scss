@@ -679,6 +679,13 @@ textarea:disabled,
   }
 }
 
+.wp-export {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
 /* Mouvement réduit : plus de transitions */
 @media (prefers-reduced-motion: reduce) {
   .wp-adminbar a,

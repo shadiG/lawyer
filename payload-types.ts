@@ -128,7 +128,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Demandes reçues par le formulaire du site. Une copie est aussi envoyée par e-mail.
+ * Demandes reçues par le formulaire du site. Passez le statut à « Confirmée » pour prévenir le client par e-mail.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bookings".
@@ -136,6 +136,21 @@ export interface UserAuthOperations {
 export interface Booking {
   id: number;
   status: 'nouveau' | 'confirme' | 'sans-suite' | 'archive';
+  /**
+   * Date et heure du rendez-vous, indiquées au client dans l’e-mail de confirmation.
+   */
+  slot?: string | null;
+  /**
+   * Ajouté à l’e-mail de confirmation ou de refus. Facultatif.
+   */
+  messageToClient?: string | null;
+  /**
+   * L’e-mail part quand le statut passe à « Confirmée » ou « Refusée / sans suite ».
+   */
+  notifyClient?: boolean | null;
+  notifiedAt?: string | null;
+  notifiedStatus?: string | null;
+  notifyError?: string | null;
   /**
    * Visible uniquement dans l’administration.
    */
@@ -333,6 +348,12 @@ export interface PayloadMigration {
  */
 export interface BookingsSelect<T extends boolean = true> {
   status?: T;
+  slot?: T;
+  messageToClient?: T;
+  notifyClient?: T;
+  notifiedAt?: T;
+  notifiedStatus?: T;
+  notifyError?: T;
   note?: T;
   name?: T;
   email?: T;
@@ -514,6 +535,24 @@ export interface Setting {
    * Ex. : un jour ouvré. Affiché dans la page : ne promettez que ce que vous tenez.
    */
   responseTime?: string | null;
+  availability?: {
+    /**
+     * Les autres jours ne sont pas proposés.
+     */
+    weekdays?: ('1' | '2' | '3' | '4' | '5' | '6' | '0')[] | null;
+    closedDates?:
+      | {
+          date: string;
+          reason?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * 0 = le jour même peut être proposé ; 1 = à partir de demain ; 2 = à partir d’après-demain…
+     */
+    minNoticeDays?: number | null;
+    daysShown?: number | null;
+  };
   siret?: string | null;
   vat?: string | null;
   insurer?: string | null;
@@ -620,6 +659,20 @@ export interface SettingsSelect<T extends boolean = true> {
         id?: T;
       };
   responseTime?: T;
+  availability?:
+    | T
+    | {
+        weekdays?: T;
+        closedDates?:
+          | T
+          | {
+              date?: T;
+              reason?: T;
+              id?: T;
+            };
+        minNoticeDays?: T;
+        daysShown?: T;
+      };
   siret?: T;
   vat?: T;
   insurer?: T;

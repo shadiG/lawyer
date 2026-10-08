@@ -35,6 +35,28 @@ Menu **Rendez-vous › Demandes de rendez-vous**. Chaque demande du formulaire y
 - Les informations du visiteur ne sont pas modifiables : elles restent fidèles à sa demande.
 - Supprimez les demandes anciennes selon la durée annoncée dans la politique de confidentialité.
 
+## Traiter une demande de rendez-vous
+Dans **Rendez-vous › Demandes de rendez-vous**, ouvrez une demande, puis dans la boîte « Options » :
+1. Passez le **Statut** à « Confirmée » et renseignez le **Créneau confirmé** (date et heure). Ajoutez si besoin un **Message au client**.
+2. Laissez cochée la case **Prévenir le client par e-mail**, puis cliquez sur **Enregistrer** : le client reçoit un e-mail avec le créneau, le mode et l'adresse du cabinet. La date d'envoi apparaît dans « Client prévenu le ».
+3. Pour décliner : statut « Refusée / sans suite » (un e-mail courtois est envoyé, avec votre message éventuel).
+
+L'e-mail ne part qu'une fois par changement de statut : modifier la note ou le message ensuite n'en renvoie pas. Décochez « Prévenir le client » pour changer le statut sans envoyer d'e-mail. Si l'envoi échoue (ou n'est pas configuré), l'erreur s'affiche dans « Erreur d'envoi » : la demande, elle, est bien enregistrée.
+
+Le client reçoit aussi un **accusé de réception** dès qu'il envoie sa demande.
+
+## Régler les disponibilités
+**Contenu › Cabinet › onglet Disponibilités** contrôle les jours proposés dans le formulaire :
+- **Jours de consultation** : les jours de la semaine ouverts.
+- **Jours fermés** : congés et jours fériés, qui ne seront plus proposés.
+- **Délai minimum** : 1 = à partir de demain, 2 = à partir d'après-demain…
+- **Nombre de jours proposés** dans le formulaire.
+
+Ces règles sont aussi vérifiées côté serveur : un jour fermé ne peut pas être demandé, même en trafiquant le formulaire.
+
+## Exporter les demandes
+En haut de la liste des demandes, **Exporter en CSV (Excel)** télécharge toutes les demandes, avec leur statut et le créneau confirmé. Le fichier s'ouvre directement dans Excel.
+
 ## Ajouter un collaborateur
 **Administration › Utilisateurs › Créer** : e-mail et mot de passe. Tout utilisateur a accès à l'ensemble de l'administration.
 
