@@ -30,7 +30,8 @@ export async function Dashboard({ payload, user }: ServerProps) {
     }
   };
 
-  const [domaines, medias, demandes, nouvelles, recentes] = await Promise.all([
+  const [articles, domaines, medias, demandes, nouvelles, recentes] = await Promise.all([
+    safe(async () => (await payload.count({ collection: "posts", ...opts })).totalDocs, 0),
     safe(async () => (await payload.count({ collection: "practices", ...opts })).totalDocs, 0),
     safe(async () => (await payload.count({ collection: "media", ...opts })).totalDocs, 0),
     safe(async () => (await payload.count({ collection: "bookings", ...opts })).totalDocs, 0),
@@ -62,6 +63,7 @@ export async function Dashboard({ payload, user }: ServerProps) {
           <div>
             <h3>Actions rapides</h3>
             <ul className="wp-links">
+              <li><Link prefetch={false} href="/admin/collections/posts/create">Rédiger un article</Link></li>
               <li><Link prefetch={false} href="/admin/collections/practices/create">Ajouter un domaine d’intervention</Link></li>
               <li><Link prefetch={false} href="/admin/collections/media/create">Ajouter une photo</Link></li>
               <li><Link prefetch={false} href="/admin/collections/bookings">Gérer les demandes de rendez-vous</Link></li>
@@ -83,6 +85,9 @@ export async function Dashboard({ payload, user }: ServerProps) {
           <h2 className="wp-postbox__title">D’un coup d’œil</h2>
           <div className="wp-postbox__body">
             <ul className="wp-glance">
+              <li className="wp-glance__item wp-glance__item--articles">
+                <Link prefetch={false} href="/admin/collections/posts">{articles} article{articles > 1 ? "s" : ""}</Link>
+              </li>
               <li className="wp-glance__item wp-glance__item--domaines">
                 <Link prefetch={false} href="/admin/collections/practices">{domaines} domaine{domaines > 1 ? "s" : ""} d’intervention</Link>
               </li>

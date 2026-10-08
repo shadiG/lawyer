@@ -1,6 +1,6 @@
 # Cabinet d'avocat : site vitrine et prise de rendez-vous
 
-Site en français pour un cabinet d'avocat : présentation, domaines d'intervention, déroulé, honoraires et formulaire de demande de rendez-vous.
+Site en français pour un cabinet d'avocat : présentation, domaines d'intervention, déroulé, honoraires, blog (« Actualités ») et formulaire de demande de rendez-vous.
 
 **Stack :** Next.js (App Router) · React 19 · Tailwind CSS v4 · Motion · Payload CMS (admin, SQLite) · Zod · Resend.
 
@@ -24,7 +24,11 @@ Variables d'environnement : voir [.env.example](.env.example).
 
 ### Tests
 
-`npm test` lance les tests unitaires (règles de disponibilité des rendez-vous, `tests/`). Ils tournent aussi dans le CI.
+`npm test` lance les tests unitaires (règles de disponibilité des rendez-vous, fonctions du blog, `tests/`). Ils tournent aussi dans le CI.
+
+### À éviter pendant `npm run dev`
+
+Ne lancez pas une commande Payload (`payload generate:types`, `migrate:create`…) pendant que `npm run dev` tourne : les deux initialisent la base et se disputent la mise à jour du schéma. Arrêtez d'abord le serveur.
 
 ### Schéma de la base
 Après avoir modifié une collection ou un global (`cms/`) : `npx payload generate:types`, `npx payload generate:importmap`, puis `npx payload migrate:create <nom>` et committer la migration. En production le schéma évolue uniquement par migrations, exécutées au démarrage.

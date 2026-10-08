@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     bookings: Booking;
+    posts: Post;
     practices: Practice;
     media: Media;
     users: User;
@@ -79,6 +80,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     bookings: BookingsSelect<false> | BookingsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
     practices: PracticesSelect<false> | PracticesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -167,29 +169,52 @@ export interface Booking {
   createdAt: string;
 }
 /**
- * Les cartes de la section « Domaines ». L’ordre croissant définit l’ordre d’affichage.
+ * Les articles du blog (« Actualités »). Un brouillon n'est pas visible sur le site tant que vous ne cliquez pas sur « Publier ».
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "practices".
+ * via the `definition` "posts".
  */
-export interface Practice {
+export interface Post {
   id: number;
   title: string;
-  icon: 'family' | 'work' | 'criminal' | 'property';
   /**
-   * Facultatif. Format paysage conseillé (3:2). Sans image, un fond bleu avec l’icône est affiché.
+   * Une à deux phrases. Affiché dans la liste des articles et dans les résultats de recherche.
    */
-  image?: (number | null) | Media;
-  text: string;
-  items?:
-    | {
-        text: string;
-        id?: string | null;
-      }[]
-    | null;
-  order?: number | null;
+  excerpt: string;
+  /**
+   * Facultatif. Format paysage conseillé (3:2).
+   */
+  cover?: (number | null) | Media;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Générée depuis le titre ; elle apparaît dans le lien de l'article. Laissez vide pour la régénérer.
+   */
+  slug?: string | null;
+  /**
+   * Facultatif : affiché comme catégorie de l'article.
+   */
+  practice?: (number | null) | Practice;
+  /**
+   * Remplie à la première publication ; modifiable (par exemple pour antidater).
+   */
+  publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * Photos et images du site.
@@ -232,6 +257,31 @@ export interface Media {
       filename?: string | null;
     };
   };
+}
+/**
+ * Les cartes de la section « Domaines ». L’ordre croissant définit l’ordre d’affichage.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "practices".
+ */
+export interface Practice {
+  id: number;
+  title: string;
+  icon: 'family' | 'work' | 'criminal' | 'property';
+  /**
+   * Facultatif. Format paysage conseillé (3:2). Sans image, un fond bleu avec l’icône est affiché.
+   */
+  image?: (number | null) | Media;
+  text: string;
+  items?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -287,6 +337,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'bookings';
         value: number | Booking;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
       } | null)
     | ({
         relationTo: 'practices';
@@ -365,6 +419,22 @@ export interface BookingsSelect<T extends boolean = true> {
   message?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  excerpt?: T;
+  cover?: T;
+  content?: T;
+  slug?: T;
+  practice?: T;
+  publishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
