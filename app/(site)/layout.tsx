@@ -45,9 +45,11 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // suppressHydrationWarning : des extensions de navigateur (Grammarly, etc.)
+  // ajoutent des attributs sur <html> et <body> avant l'hydratation de React.
   return (
-    <html lang="fr" className={`${geist.variable} ${instrumentSerif.variable}`}>
-      <body>
+    <html lang="fr" className={`${geist.variable} ${instrumentSerif.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         {/* Sans JavaScript, les révélations au scroll ne doivent rien cacher. */}
         <noscript>
           <style>{`[style*="opacity: 0"]{opacity:1!important;transform:none!important;filter:none!important}`}</style>
