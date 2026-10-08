@@ -7,6 +7,7 @@ import { buildConfig } from "payload";
 import sharp from "sharp";
 import { Bookings } from "./cms/collections/bookings";
 import { Media } from "./cms/collections/media";
+import { Posts } from "./cms/collections/posts";
 import { Practices } from "./cms/collections/practices";
 import { Users } from "./cms/collections/users";
 import { Home } from "./cms/globals/home";
@@ -28,10 +29,45 @@ export default buildConfig({
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     dateFormat: "dd/MM/yyyy HH:mm",
+    // Habillage WordPress = thème clair uniquement (sinon l'OS en mode sombre
+    // bascule Payload en sombre et mélange les deux palettes).
+    theme: "light",
+    // Des extensions de navigateur (Grammarly…) modifient <html>/<body> avant React.
+    suppressHydrationWarning: true,
     meta: { titleSuffix: " · Administration du cabinet" },
+    // Habillage « WordPress » : barre noire, menu latéral, tableau de bord.
+    components: {
+      header: ["/cms/components/AdminBar#AdminBar"],
+      beforeNavLinks: ["/cms/components/NavTop#NavTop", "/cms/components/KeepNavOpen#KeepNavOpen"],
+      graphics: {
+        Logo: "/cms/components/Logo#Logo",
+        Icon: "/cms/components/Icon#Icon",
+      },
+      views: { dashboard: { Component: "/cms/components/Dashboard#Dashboard" } },
+    },
   },
-  i18n: { supportedLanguages: { fr }, fallbackLanguage: "fr" },
-  collections: [Bookings, Practices, Media, Users],
+  i18n: {
+    supportedLanguages: { fr },
+    fallbackLanguage: "fr",
+    // Libellés plus naturels que « Créer un(e) nouveau ou nouvelle ».
+    translations: {
+      fr: {
+        general: {
+          createNew: "Ajouter",
+          addNew: "Ajouter",
+          save: "Enregistrer",
+          saveChanges: "Enregistrer les modifications",
+          perPage: "Par page : {{limit}}",
+          creatingNewLabel: "Création : {{label}}",
+          createNewLabel: "Ajouter : {{label}}",
+        },
+        fields: {
+          chooseFromExisting: "Choisir dans la médiathèque",
+        },
+      },
+    },
+  },
+  collections: [Bookings, Posts, Practices, Media, Users],
   globals: [Settings, Home],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET ?? "",

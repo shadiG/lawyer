@@ -4,7 +4,7 @@ import { Clock, Mail, Phone, Pin, Shield } from "./icons";
 import { Reveal } from "./reveal";
 import { SectionHeading } from "./section-heading";
 
-export function Booking({ booking, site }: { booking: SiteContent["booking"]; site: SiteContent["site"] }) {
+export function Booking({ booking, site, availability }: { booking: SiteContent["booking"]; site: SiteContent["site"]; availability: SiteContent["availability"] }) {
   return (
     <section id="rendez-vous" className="bg-paper-deep">
       <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
@@ -52,7 +52,7 @@ export function Booking({ booking, site }: { booking: SiteContent["booking"]; si
 
           <Reveal className="min-w-0 lg:col-span-8" delay={0.08}>
             <div className="relative bg-white p-6 shadow-[0_24px_50px_-28px_rgb(18_22_29/0.4)] ring-1 ring-ink/[0.07] sm:p-9">
-              <BookingForm motifs={booking.motifs} />
+              <BookingForm motifs={booking.motifs} availability={availability} />
             </div>
           </Reveal>
         </div>

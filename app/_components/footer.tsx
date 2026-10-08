@@ -57,9 +57,9 @@ export function Footer({ site }: { site: SiteContent["site"] }) {
             © {siteYear} {site.lawyer}. Tous droits réservés.
           </p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
-            {nav.slice(1, 5).map((n) => (
+            {nav.slice(1, 6).map((n) => (
               <li key={n.href}>
-                <Link href={`/${n.href}`} className="link-draw hover:text-white">{n.label}</Link>
+                <Link href={n.href.startsWith("#") ? `/${n.href}` : n.href} className="link-draw hover:text-white">{n.label}</Link>
               </li>
             ))}
             <li>
