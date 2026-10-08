@@ -1,13 +1,82 @@
 import type { Payload } from "payload";
-import { simpleLexical } from "../app/_lib/blog";
+import type { Practice } from "../payload-types";
+import { isEmptyRich, plainToLexical, simpleLexical } from "../app/_lib/blog";
 import { defaultContent as d } from "../app/_lib/content";
+
+const text = (v: unknown) => (typeof v === "string" ? v : "");
+/** Une ancienne saisie à convertir : du texte, et pas encore de contenu riche à sa place. */
+const needsConversion = (legacy: unknown, rich: unknown) => text(legacy).trim() !== "" && isEmptyRich(rich);
+
+/**
+ * Conversion des anciens textes (saisis avant l'éditeur WYSIWYG) vers l'éditeur riche.
+ *
+ * Idempotente et sans perte : le texte est copié dans le champ riche, puis l'ancien champ
+ * est vidé pour qu'il ne puisse pas « ressusciter » si l'avocat efface le texte riche.
+ * Elle ne fait rien quand tout est déjà converti (cas courant, une simple lecture).
+ */
+export async function convertLegacyText(payload: Payload) {
+  let converted = 0;
+
+  const home = await payload.findGlobal({ slug: "home", depth: 0 });
+  const patch: Record<string, unknown> = {};
+
+  if (needsConversion(home.hero?.lead, home.hero?.leadRich)) {
+    patch.hero = { leadRich: plainToLexical(text(home.hero?.lead)), lead: null };
+    converted++;
+  }
+
+  const paragraphs = (home.about?.paragraphs ?? []).map((p) => text(p.text).trim()).filter(Boolean);
+  if (paragraphs.length > 0 && isEmptyRich(home.about?.body)) {
+    patch.about = { body: plainToLexical(paragraphs.join("\n\n")), paragraphs: [] };
+    converted++;
+  }
+
+  const steps = home.steps ?? [];
+  if (steps.some((s) => needsConversion(s.text, s.body))) {
+    patch.steps = steps.map((s) =>
+      needsConversion(s.text, s.body) ? { id: s.id, title: s.title, body: plainToLexical(text(s.text)), text: "" } : s,
+    );
+    converted++;
+  }
+
+  const fees: Record<string, unknown> = {};
+  if (needsConversion(home.fees?.lead, home.fees?.leadRich)) {
+    fees.leadRich = plainToLexical(text(home.fees?.lead));
+    fees.lead = null;
+  }
+  const items = home.fees?.items ?? [];
+  if (items.some((i) => needsConversion(i.text, i.body))) {
+    fees.items = items.map((i) =>
+      needsConversion(i.text, i.body) ? { id: i.id, title: i.title, body: plainToLexical(text(i.text)), text: "" } : i,
+    );
+  }
+  if (Object.keys(fees).length) {
+    patch.fees = fees;
+    converted++;
+  }
+
+  if (Object.keys(patch).length) {
+    await payload.updateGlobal({ slug: "home", data: patch as never });
+  }
+
+  const { docs: practices } = await payload.find({ collection: "practices", limit: 100, pagination: false, depth: 0 });
+  for (const p of practices) {
+    if (needsConversion(p.text, p.body)) {
+      await payload.update({ collection: "practices", id: p.id, data: { body: plainToLexical(text(p.text)) as never, text: "" } });
+      converted++;
+    }
+  }
+
+  if (converted > 0) payload.logger.info(`Textes convertis vers l'éditeur riche : ${converted} bloc(s).`);
+}
 
 /**
  * Amorçage idempotent, exécuté à chaque démarrage :
  * 1. crée le premier administrateur depuis ADMIN_EMAIL / ADMIN_PASSWORD
  *    (évite l'écran « créer le premier utilisateur », ouvert à tout visiteur
  *    qui arriverait avant vous) ;
- * 2. pré-remplit l'admin avec le contenu par défaut si la base est vide.
+ * 2. convertit les anciens textes vers l'éditeur riche (voir convertLegacyText) ;
+ * 3. pré-remplit l'admin avec le contenu par défaut si la base est vide.
  */
 export async function seed(payload: Payload) {
   const { totalDocs: users } = await payload.count({ collection: "users" });
@@ -23,6 +92,8 @@ export async function seed(payload: Payload) {
       );
     }
   }
+
+  await convertLegacyText(payload);
 
   const { totalDocs: practices } = await payload.count({ collection: "practices" });
   if (practices > 0) return;
@@ -63,18 +134,18 @@ export async function seed(payload: Payload) {
     },
   });
 
+  const rich = (v: unknown) => plainToLexical(text(v)) as unknown as NonNullable<Practice["body"]>;
   await payload.updateGlobal({
     slug: "home",
     data: {
-      hero: d.hero,
-      about: {
-        title: d.about.title,
-        paragraphs: d.about.paragraphs.map((text) => ({ text })),
-        quote: d.about.quote,
-        facts: d.about.facts,
+      hero: { eyebrow: d.hero.eyebrow, title: d.hero.title, leadRich: rich(d.hero.lead), highlights: d.hero.highlights },
+      about: { title: d.about.title, body: rich(d.about.body), quote: d.about.quote, facts: d.about.facts },
+      steps: d.steps.map((st) => ({ title: st.title, body: rich(st.text), text: "" })),
+      fees: {
+        title: d.fees.title,
+        leadRich: rich(d.fees.lead),
+        items: d.fees.items.map((i) => ({ title: i.title, body: rich(i.text), text: "" })),
       },
-      steps: d.steps,
-      fees: { title: d.fees.title, lead: d.fees.lead, items: d.fees.items },
       booking: { title: d.booking.title, lead: d.booking.lead },
     },
   });
@@ -82,7 +153,7 @@ export async function seed(payload: Payload) {
   for (const [i, p] of d.practices.entries()) {
     await payload.create({
       collection: "practices",
-      data: { title: p.title, icon: p.icon, text: p.text, items: p.items.map((text) => ({ text })), order: (i + 1) * 10 },
+      data: { title: p.title, icon: p.icon, body: rich(p.text), text: "", items: p.items.map((t) => ({ text: t })), order: (i + 1) * 10 },
     });
   }
   payload.logger.info("Contenu par défaut chargé dans l'administration.");

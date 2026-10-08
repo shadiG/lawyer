@@ -4,6 +4,7 @@ import { motion, useScroll, useSpring } from "motion/react";
 import { useRef } from "react";
 import type { SiteContent } from "../_lib/content";
 import { Reveal } from "./reveal";
+import { RichBlock } from "./rich";
 import { SectionHeading } from "./section-heading";
 
 export function Process({ steps }: { steps: SiteContent["steps"] }) {
@@ -34,7 +35,7 @@ export function Process({ steps }: { steps: SiteContent["steps"] }) {
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <h3 className="display mt-6 text-[1.4rem]">{step.title}</h3>
-                <p className="prose-fr mt-3 leading-relaxed text-white/65">{step.text}</p>
+                <RichBlock value={step.text} className="prose-fr mt-3 leading-relaxed text-white/65" />
               </Reveal>
             </li>
           ))}

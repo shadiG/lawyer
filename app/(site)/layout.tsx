@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
+import { richToText } from "../_lib/blog";
 import { getContent } from "../_lib/cms";
 import { siteUrl } from "../_lib/content";
 import { Providers } from "../_components/providers";
@@ -32,7 +33,7 @@ export const instant = false;
 
 export async function generateMetadata(): Promise<Metadata> {
   const { site, hero } = await getContent();
-  const description = `${site.title}. ${hero.lead}`.slice(0, 280);
+  const description = `${site.title}. ${richToText(hero.lead)}`.slice(0, 280);
   return {
     metadataBase: new URL(siteUrl),
     title: { default: `${site.lawyer} · ${site.title}`, template: `%s · ${site.name}` },

@@ -26,6 +26,7 @@ export function lexicalToText(state: unknown): string {
   const out: string[] = [];
   const walk = (n: Node) => {
     if (typeof n.text === "string") out.push(n.text);
+    if (n.type === "linebreak") out.push(" "); // un saut de ligne sépare deux mots
     if (n.children) {
       for (const c of n.children) walk(c);
       out.push(" ");
@@ -70,4 +71,56 @@ export function isSafeHref(url: unknown): url is string {
   // Les navigateurs ignorent tabulations et retours à la ligne dans le schéma : on les retire avant de juger.
   const u = url.replace(/[\u0000-\u0020]+/g, "");
   return /^(https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i.test(u);
+}
+
+/* ------------------------------------------------------------------ *
+ * Textes riches du site (éditeur WYSIWYG des champs de contenu)
+ * ------------------------------------------------------------------ */
+
+/** Un texte du site : une chaîne simple (valeurs par défaut) ou un état de l'éditeur riche. */
+export type Rich = string | { root: Record<string, unknown> };
+
+const isEditorState = (v: unknown): v is { root: Record<string, unknown> } =>
+  typeof v === "object" && v !== null && "root" in v && typeof (v as { root: unknown }).root === "object";
+
+/** Un champ riche est « vide » s'il n'a aucun texte (un éditeur vidé garde une structure vide). */
+export function isEmptyRich(v: unknown): boolean {
+  if (typeof v === "string") return v.trim() === "";
+  if (!isEditorState(v)) return true;
+  return lexicalToText(v) === "";
+}
+
+/** Texte brut d'un texte riche (méta-descriptions, aperçus). */
+export function richToText(v: Rich): string {
+  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : lexicalToText(v);
+}
+
+/** Le texte riche saisi s'il existe, sinon la valeur de repli. */
+export function pickRich(value: unknown, fallback: Rich): Rich {
+  return isEditorState(value) && !isEmptyRich(value) ? value : fallback;
+}
+
+/**
+ * Texte brut → contenu de l'éditeur. Lignes vides = nouveaux paragraphes ;
+ * un simple retour à la ligne devient un saut de ligne dans le paragraphe.
+ */
+export function plainToLexical(text: string) {
+  const textNode = (t: string) => ({ type: "text", text: t, version: 1, detail: 0, format: 0, mode: "normal", style: "" });
+  const base = { version: 1, format: "", indent: 0, direction: "ltr" as const };
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  return {
+    root: {
+      type: "root",
+      ...base,
+      children: paragraphs.map((p) => ({
+        type: "paragraph",
+        textFormat: 0,
+        ...base,
+        children: p.split("\n").flatMap((line, i) => (i === 0 ? [textNode(line)] : [{ type: "linebreak", version: 1 }, textNode(line)])),
+      })),
+    },
+  };
 }

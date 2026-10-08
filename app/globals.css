@@ -234,3 +234,40 @@ body {
 .article-figure {
   margin: 2em 0;
 }
+
+/* ------------------------------------------------------------------ *
+ * Textes courts du site édités dans l'éditeur WYSIWYG (.rich)
+ * La taille et la couleur viennent du parent : seul l'espacement est réglé ici.
+ * ------------------------------------------------------------------ */
+.rich > :first-child {
+  margin-top: 0;
+}
+.rich > :last-child {
+  margin-bottom: 0;
+}
+.rich p + p {
+  margin-top: 0.9em;
+}
+.rich ul,
+.rich ol {
+  margin: 0.8em 0;
+  padding-left: 1.25em;
+  text-align: left;
+}
+.rich ul {
+  list-style: disc;
+}
+.rich ol {
+  list-style: decimal;
+}
+.rich li + li {
+  margin-top: 0.25em;
+}
+.rich strong {
+  font-weight: 700;
+}
+.rich a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

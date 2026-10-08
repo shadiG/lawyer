@@ -25,6 +25,15 @@ Menu **Contenu** :
 
 Cliquez sur **Enregistrer** : le changement est visible tout de suite sur le site. Un champ laissé vide reprend le texte d'origine du site.
 
+## L'éditeur de texte (WYSIWYG)
+Les textes de la page d'accueil (introduction, présentation du cabinet, étapes, honoraires) et la description des domaines d'intervention se saisissent dans un **éditeur visuel** : ce que vous voyez est ce qui s'affichera sur le site.
+- Au-dessus du champ en cours de saisie, une barre d'outils propose le style de texte, le **gras**, l'*italique*, le <u>souligné</u>, les listes à puces ou numérotées et les liens.
+- Une ligne vide sépare deux paragraphes.
+- Si vous videz entièrement un champ, le site réaffiche son texte d'origine (et non un blanc).
+- Les liens dangereux (par exemple `javascript:`) sont neutralisés à l'affichage.
+
+Les articles du blog ont, eux, un éditeur plus complet (intertitres, citations, images).
+
 ## Changer la photo
 1. **Médiathèque › Ajouter** : glissez la photo (format portrait conseillé), écrivez une courte description (lue par les lecteurs d'écran), sauvegardez.
 2. **Cabinet › Identité › Photo de portrait** : choisissez-la, sauvegardez.

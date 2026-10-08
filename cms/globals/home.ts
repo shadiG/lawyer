@@ -1,5 +1,9 @@
 import type { GlobalConfig } from "payload";
+import { textEditor } from "../editors";
+import { legacyText, requireText } from "../fields";
 import { publishChanges } from "../hooks/revalidate";
+
+const legacy = { hidden: true } as const;  // champs facultatifs d'origine, cachés (conversion automatique)
 
 export const Home: GlobalConfig = {
   slug: "home",
@@ -21,7 +25,8 @@ export const Home: GlobalConfig = {
               fields: [
                 { name: "eyebrow", type: "text", label: "Étiquette", maxLength: 60 },
                 { name: "title", type: "text", label: "Titre principal", required: true, maxLength: 90 },
-                { name: "lead", type: "textarea", label: "Introduction", maxLength: 280 },
+                { name: "leadRich", type: "richText", editor: textEditor, label: "Introduction" },
+                { name: "lead", type: "textarea", label: "Introduction (ancienne saisie)", admin: legacy },
                 {
                   name: "highlights",
                   type: "array",
@@ -47,12 +52,18 @@ export const Home: GlobalConfig = {
               fields: [
                 { name: "title", type: "text", label: "Titre", maxLength: 90 },
                 {
+                  name: "body",
+                  type: "richText",
+                  editor: textEditor,
+                  label: "Présentation",
+                  admin: { description: "Plusieurs paragraphes possibles ; gras, italique, listes et liens disponibles dans la barre d’outils." },
+                },
+                {
                   name: "paragraphs",
                   type: "array",
-                  label: "Paragraphes",
-                  maxRows: 4,
-                  labels: { singular: "Paragraphe", plural: "Paragraphes" },
-                  fields: [{ name: "text", type: "textarea", label: "Texte", required: true }],
+                  label: "Paragraphes (anciens)",
+                  admin: legacy,
+                  fields: [{ name: "text", label: "Texte", ...legacyText }],
                 },
                 { name: "quote", type: "text", label: "Citation", maxLength: 140 },
                 {
@@ -83,7 +94,8 @@ export const Home: GlobalConfig = {
               admin: { description: "Numérotées automatiquement dans l’ordre." },
               fields: [
                 { name: "title", type: "text", label: "Titre", required: true, maxLength: 60 },
-                { name: "text", type: "textarea", label: "Texte", required: true, maxLength: 300 },
+                { name: "body", type: "richText", editor: textEditor, label: "Texte", validate: requireText },
+                { name: "text", label: "Texte (ancienne saisie)", ...legacyText },
               ],
             },
           ],
@@ -97,7 +109,8 @@ export const Home: GlobalConfig = {
               label: "Honoraires",
               fields: [
                 { name: "title", type: "text", label: "Titre", maxLength: 90 },
-                { name: "lead", type: "textarea", label: "Introduction", maxLength: 320 },
+                { name: "leadRich", type: "richText", editor: textEditor, label: "Introduction" },
+                { name: "lead", type: "textarea", label: "Introduction (ancienne saisie)", admin: legacy },
                 {
                   name: "items",
                   type: "array",
@@ -106,7 +119,8 @@ export const Home: GlobalConfig = {
                   labels: { singular: "Point", plural: "Points" },
                   fields: [
                     { name: "title", type: "text", label: "Titre", required: true, maxLength: 60 },
-                    { name: "text", type: "textarea", label: "Texte", required: true, maxLength: 300 },
+                    { name: "body", type: "richText", editor: textEditor, label: "Texte", validate: requireText },
+                    { name: "text", label: "Texte (ancienne saisie)", ...legacyText },
                   ],
                 },
               ],

@@ -5,6 +5,7 @@ import type { SiteContent } from "../_lib/content";
 import { Button } from "./button";
 import { Layers, Search, User } from "./icons";
 import { Portrait } from "./portrait";
+import { RichBlock } from "./rich";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 const highlightIcons = [Layers, Search, User];
@@ -48,14 +49,14 @@ export function Hero({ hero, site }: { hero: SiteContent["hero"]; site: SiteCont
             {lead} {accent ? <span className="text-brass">{accent}</span> : null}
           </motion.h1>
 
-          <motion.p
+          <motion.div
             className="prose-fr mt-6 max-w-xl text-[1.08rem] leading-relaxed text-ink-soft"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
           >
-            {hero.lead}
-          </motion.p>
+            <RichBlock value={hero.lead} />
+          </motion.div>
 
           <motion.div
             className="mt-9 flex flex-wrap items-center gap-4"

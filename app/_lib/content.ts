@@ -9,6 +9,10 @@
  * téléphone… à remplacer par les informations réelles de l'avocat.
  */
 
+import type { Rich } from "./blog";
+
+export type { Rich };
+
 export type PracticeIcon = "family" | "work" | "criminal" | "property";
 
 /** Jours où l'on peut demander un rendez-vous (réglable dans l'admin). */
@@ -41,17 +45,18 @@ export type SiteContent = {
     portraitAlt: string | null;
   };
   availability: Availability;
-  hero: { eyebrow: string; title: string; lead: string; highlights: { title: string; text: string }[] };
+  hero: { eyebrow: string; title: string; lead: Rich; highlights: { title: string; text: string }[] };
   about: {
     eyebrow: string;
     title: string;
-    paragraphs: string[];
+    /** Présentation du cabinet : un ou plusieurs paragraphes (texte simple ou éditeur riche). */
+    body: Rich;
     quote: string;
     facts: { label: string; value: string }[];
   };
-  practices: { id: string; icon: PracticeIcon; title: string; text: string; items: string[]; imageUrl: string | null }[];
-  steps: { title: string; text: string }[];
-  fees: { eyebrow: string; title: string; lead: string; items: { title: string; text: string }[] };
+  practices: { id: string; icon: PracticeIcon; title: string; text: Rich; items: string[]; imageUrl: string | null }[];
+  steps: { title: string; text: Rich }[];
+  fees: { eyebrow: string; title: string; lead: Rich; items: { title: string; text: Rich }[] };
   booking: { eyebrow: string; title: string; lead: string; motifs: string[] };
   legal: {
     siret: string;
@@ -136,10 +141,9 @@ export const defaultContent: SiteContent = {
   about: {
     eyebrow: "Le cabinet",
     title: "Une pratique exigeante, une relation de confiance.",
-    paragraphs: [
-      "Inscrite au Barreau de Paris, Maître Marchand accompagne particuliers et dirigeants dans les moments où le droit devient personnel : une séparation, un licenciement, une mise en cause, un litige qui s’enlise.",
+    body:
+      "Inscrite au Barreau de Paris, Maître Marchand accompagne particuliers et dirigeants dans les moments où le droit devient personnel : une séparation, un licenciement, une mise en cause, un litige qui s’enlise.\n\n" +
       "Sa méthode tient en trois engagements : comprendre votre situation avant de conseiller, vous dire sans détour ce qui est possible, et vous tenir informé à chaque étape. Le secret professionnel garantit la confidentialité de chaque échange.",
-    ],
     quote: "Un bon conseil n’est pas celui qui rassure, c’est celui qui éclaire.",
     facts: [
       { label: "Barreau", value: "Paris" },
