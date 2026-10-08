@@ -19,6 +19,17 @@ const sourceSerif = Source_Serif_4({
   display: "swap",
 });
 
+/**
+ * Les pages du site lisent leur contenu dans la base (Payload) via `getContent()`,
+ * mis en cache et invalidé à chaque publication. En développement, Next valide la
+ * « navigation instantanée » avec un cache froid et juge cette lecture bloquante
+ * au premier chargement. En production la page est pré-rendue en statique au build
+ * (`next build` : ○ /), et se régénère après une publication dans l'admin.
+ * On l'indique explicitement plutôt que d'envelopper tout le contenu dans un
+ * <Suspense> : le HTML initial doit contenir le texte (référencement).
+ */
+export const instant = false;
+
 export async function generateMetadata(): Promise<Metadata> {
   const { site, hero } = await getContent();
   const description = `${site.title}. ${hero.lead}`.slice(0, 280);
