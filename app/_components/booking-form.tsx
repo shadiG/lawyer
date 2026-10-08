@@ -45,7 +45,7 @@ function upcomingDays(count = 12): Day[] {
 /* ---------- briques de formulaire ---------- */
 
 const input =
-  "w-full rounded-2xl bg-paper px-4 py-3.5 text-[1rem] text-ink ring-1 ring-ink/10 transition-[box-shadow,background-color] duration-200 placeholder:text-ink-faint focus:bg-white focus:outline-none focus:ring-2 focus:ring-brass aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-[#a4372c]";
+  "w-full rounded-md bg-paper-deep px-4 py-3.5 text-[1rem] text-ink ring-1 ring-ink/10 transition-[box-shadow,background-color] duration-200 placeholder:text-ink-faint focus:bg-white focus:outline-none focus:ring-2 focus:ring-brass aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-[#a4372c]";
 
 function Field({
   id,
@@ -102,7 +102,7 @@ function ChipGroup({
         {options.map((o) => (
           <label key={o.value} className="relative cursor-pointer">
             <input type="radio" name={name} value={o.value} defaultChecked={defaultValue === o.value} className="peer sr-only" />
-            <span className="press block rounded-full bg-paper px-4 py-2.5 text-sm text-ink ring-1 ring-ink/10 transition-[background-color,color,box-shadow] duration-200 peer-checked:bg-ink peer-checked:text-paper peer-checked:ring-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brass hover:ring-ink/30">
+            <span className="press block rounded-md bg-paper-deep px-4 py-2.5 text-sm text-ink ring-1 ring-ink/10 transition-[background-color,color,box-shadow] duration-200 peer-checked:bg-brass peer-checked:text-white peer-checked:ring-brass peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brass hover:ring-ink/30">
               {o.label}
               {o.detail ? <span className="ml-1.5 opacity-60">{o.detail}</span> : null}
             </span>
@@ -120,13 +120,13 @@ function Submit() {
     <button
       type="submit"
       disabled={pending}
-      className="group press flex w-full items-center justify-between gap-3 rounded-full bg-ink py-2 pl-7 pr-2 text-[1rem] font-medium text-paper transition-opacity disabled:opacity-80"
+      className="group press flex w-full items-center justify-between gap-3 rounded-sm bg-brass py-2 pl-7 pr-2 text-[0.82rem] font-semibold uppercase tracking-[0.12em] text-white transition-colors duration-200 hover:bg-brass-dark disabled:opacity-80"
     >
       <span>{pending ? "Envoi en cours…" : "Envoyer ma demande"}</span>
-      <span className="grid size-11 place-items-center rounded-full bg-paper/15">
+      <span className="grid size-11 place-items-center rounded-sm bg-white/15">
         {pending ? (
           <motion.span
-            className="size-4 rounded-full border-2 border-paper/30 border-t-paper"
+            className="size-4 rounded-full border-2 border-white/30 border-t-white"
             animate={{ rotate: 360 }}
             transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
           />
@@ -177,7 +177,7 @@ function Form({ motifs, onDone }: { motifs: string[]; onDone: () => void }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: EASE }}
-            className="rounded-2xl bg-[#a4372c]/10 px-4 py-3 text-sm text-[#7d2a21] ring-1 ring-[#a4372c]/25"
+            className="rounded-md bg-[#a4372c]/10 px-4 py-3 text-sm text-[#7d2a21] ring-1 ring-[#a4372c]/25"
           >
             {state.message}
           </motion.p>
@@ -201,14 +201,14 @@ function Form({ motifs, onDone }: { motifs: string[]; onDone: () => void }) {
             ? days.map((d) => (
                 <label key={d.value} className="relative shrink-0 cursor-pointer snap-start">
                   <input type="radio" name="day" value={d.value} defaultChecked={v.day === d.value} className="peer sr-only" />
-                  <span className="press flex w-[4.25rem] flex-col items-center rounded-2xl bg-paper px-2 py-3 ring-1 ring-ink/10 transition-[background-color,color,box-shadow] duration-200 peer-checked:bg-ink peer-checked:text-paper peer-checked:ring-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brass hover:ring-ink/30">
+                  <span className="press flex w-[4.25rem] flex-col items-center rounded-md bg-paper-deep px-2 py-3 ring-1 ring-ink/10 transition-[background-color,color,box-shadow] duration-200 peer-checked:bg-brass peer-checked:text-white peer-checked:ring-brass peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brass hover:ring-ink/30">
                     <span className="text-[0.65rem] uppercase tracking-[0.12em] opacity-60">{d.weekday}</span>
                     <span className="display my-0.5 text-[1.6rem] leading-none">{d.day}</span>
                     <span className="text-[0.65rem] uppercase tracking-[0.12em] opacity-60">{d.month}</span>
                   </span>
                 </label>
               ))
-            : Array.from({ length: 6 }, (_, i) => <span key={i} className="h-[5.25rem] w-[4.25rem] shrink-0 rounded-2xl bg-ink/[0.05]" />)}
+            : Array.from({ length: 6 }, (_, i) => <span key={i} className="h-[5.25rem] w-[4.25rem] shrink-0 rounded-md bg-ink/[0.05]" />)}
         </div>
         <FieldError id="day-error" error={err("day")} />
       </fieldset>
@@ -237,7 +237,7 @@ function Form({ motifs, onDone }: { motifs: string[]; onDone: () => void }) {
 
       <div>
         <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-ink-soft">
-          <input type="checkbox" name="consent" defaultChecked={false} aria-invalid={!!err("consent")} aria-describedby="consent-error" className="mt-1 size-4 shrink-0 accent-[#14181d]" />
+          <input type="checkbox" name="consent" defaultChecked={false} aria-invalid={!!err("consent")} aria-describedby="consent-error" className="mt-1 size-4 shrink-0 accent-[#0b49b3]" />
           <span>
             J’accepte que ces informations soient utilisées pour traiter ma demande, conformément à la{" "}
             <a href="/confidentialite" className="link-draw text-ink">politique de confidentialité</a>.
@@ -260,7 +260,7 @@ function Success({ onDone }: { onDone: () => void }) {
       transition={{ duration: 0.6, ease: EASE }}
       className="py-10 text-center"
     >
-      <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="#7a5a32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="#0b49b3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto" aria-hidden="true">
         <motion.circle cx="32" cy="32" r="28" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.7, ease: EASE }} />
         <motion.path d="m21 33 8 8 15-17" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, ease: EASE, delay: 0.5 }} />
       </svg>

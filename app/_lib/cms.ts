@@ -28,7 +28,7 @@ export async function getContent(): Promise<SiteContent> {
     const [settings, home, practices] = await Promise.all([
       payload.findGlobal({ slug: "settings", depth: 1 }),
       payload.findGlobal({ slug: "home", depth: 0 }),
-      payload.find({ collection: "practices", sort: "order", limit: 12, depth: 0, pagination: false }),
+      payload.find({ collection: "practices", sort: "order", limit: 12, depth: 1, pagination: false }),
     ]);
     cacheLife("max");
 
@@ -42,6 +42,7 @@ export async function getContent(): Promise<SiteContent> {
         title: str(p.title, ""),
         text: str(p.text, ""),
         items: rows(p.items, (i) => str(i.text, "") || null, []),
+        imageUrl: typeof p.image === "object" && p.image ? ((p.image as Media).sizes?.card?.url ?? (p.image as Media).url ?? null) : null,
       }),
       d.practices,
     );
@@ -70,6 +71,7 @@ export async function getContent(): Promise<SiteContent> {
         eyebrow: str(home.hero?.eyebrow, d.hero.eyebrow),
         title: str(home.hero?.title, d.hero.title),
         lead: str(home.hero?.lead, d.hero.lead),
+        highlights: rows(home.hero?.highlights, (h) => (h.title && h.text ? { title: h.title, text: h.text } : null), d.hero.highlights),
       },
       about: {
         eyebrow: d.about.eyebrow,

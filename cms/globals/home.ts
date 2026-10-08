@@ -22,6 +22,17 @@ export const Home: GlobalConfig = {
                 { name: "eyebrow", type: "text", label: "Étiquette", maxLength: 60 },
                 { name: "title", type: "text", label: "Titre principal", required: true, maxLength: 90 },
                 { name: "lead", type: "textarea", label: "Introduction", maxLength: 280 },
+                {
+                  name: "highlights",
+                  type: "array",
+                  label: "Atouts (bandeau bleu sous le bandeau d’accueil)",
+                  maxRows: 3,
+                  labels: { singular: "Atout", plural: "Atouts" },
+                  fields: [
+                    { name: "title", type: "text", label: "Titre", required: true, maxLength: 40 },
+                    { name: "text", type: "textarea", label: "Texte", required: true, maxLength: 110 },
+                  ],
+                },
               ],
             },
           ],

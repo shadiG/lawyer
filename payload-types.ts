@@ -161,6 +161,10 @@ export interface Practice {
   id: number;
   title: string;
   icon: 'family' | 'work' | 'criminal' | 'property';
+  /**
+   * Facultatif. Format paysage conseillé (3:2). Sans image, un fond bleu avec l’icône est affiché.
+   */
+  image?: (number | null) | Media;
   text: string;
   items?:
     | {
@@ -197,6 +201,14 @@ export interface Media {
   focalY?: number | null;
   sizes?: {
     portrait?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
       url?: string | null;
       width?: number | null;
       height?: number | null;
@@ -340,6 +352,7 @@ export interface BookingsSelect<T extends boolean = true> {
 export interface PracticesSelect<T extends boolean = true> {
   title?: T;
   icon?: T;
+  image?: T;
   text?: T;
   items?:
     | T
@@ -372,6 +385,16 @@ export interface MediaSelect<T extends boolean = true> {
     | T
     | {
         portrait?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
           | T
           | {
               url?: T;
@@ -516,6 +539,13 @@ export interface Home {
     eyebrow?: string | null;
     title: string;
     lead?: string | null;
+    highlights?:
+      | {
+          title: string;
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
   };
   about?: {
     title?: string | null;
@@ -612,6 +642,13 @@ export interface HomeSelect<T extends boolean = true> {
         eyebrow?: T;
         title?: T;
         lead?: T;
+        highlights?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              id?: T;
+            };
       };
   about?:
     | T

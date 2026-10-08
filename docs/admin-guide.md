@@ -11,8 +11,8 @@ Menu **Contenu** :
 | Je veux changer… | Où |
 | --- | --- |
 | mon nom, mon titre, ma photo, mon adresse, mon téléphone, mes horaires | **Cabinet** |
-| le titre et l'introduction de la page, ma présentation, les étapes, les honoraires | **Page d'accueil** (un onglet par section) |
-| les cartes « Domaines d'intervention » (ajouter, retirer, réordonner) | **Domaines d'intervention** : le champ « Ordre d'affichage » trie les cartes |
+| le titre et l'introduction de la page, les 3 atouts du bandeau bleu, ma présentation, les étapes, les honoraires | **Page d'accueil** (un onglet par section) |
+| les cartes « Domaines d'intervention » (ajouter, retirer, réordonner, ajouter une image) | **Domaines d'intervention** : le champ « Ordre d'affichage » trie les cartes ; « Image de la carte » est facultatif (format paysage) |
 | le SIRET, l'assurance, l'hébergeur (pages légales) | **Cabinet › Mentions légales** |
 
 Cliquez sur **Sauvegarder** : le changement est visible tout de suite sur le site. Un champ laissé vide reprend le texte d'origine du site.

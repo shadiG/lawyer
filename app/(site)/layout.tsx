@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import { Geist, Source_Serif_4 } from "next/font/google";
 import { getContent } from "../_lib/cms";
 import { siteUrl } from "../_lib/content";
 import { Providers } from "../_components/providers";
@@ -11,10 +11,10 @@ const geist = Geist({
   display: "swap",
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["600", "700"],
   style: ["normal", "italic"],
   display: "swap",
 });
@@ -39,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#f5f0e6",
+  themeColor: "#0b49b3",
   width: "device-width",
   initialScale: 1,
 };
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // suppressHydrationWarning : des extensions de navigateur (Grammarly, etc.)
   // ajoutent des attributs sur <html> et <body> avant l'hydratation de React.
   return (
-    <html lang="fr" className={`${geist.variable} ${instrumentSerif.variable}`} suppressHydrationWarning>
+    <html lang="fr" className={`${geist.variable} ${sourceSerif.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         {/* Sans JavaScript, les révélations au scroll ne doivent rien cacher. */}
         <noscript>

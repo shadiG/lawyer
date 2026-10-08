@@ -28,7 +28,7 @@ export type SiteContent = {
     portraitUrl: string | null;
     portraitAlt: string | null;
   };
-  hero: { eyebrow: string; title: string; lead: string };
+  hero: { eyebrow: string; title: string; lead: string; highlights: { title: string; text: string }[] };
   about: {
     eyebrow: string;
     title: string;
@@ -36,7 +36,7 @@ export type SiteContent = {
     quote: string;
     facts: { label: string; value: string }[];
   };
-  practices: { id: string; icon: PracticeIcon; title: string; text: string; items: string[] }[];
+  practices: { id: string; icon: PracticeIcon; title: string; text: string; items: string[]; imageUrl: string | null }[];
   steps: { title: string; text: string }[];
   fees: { eyebrow: string; title: string; lead: string; items: { title: string; text: string }[] };
   booking: { eyebrow: string; title: string; lead: string; motifs: string[] };
@@ -58,10 +58,12 @@ export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:300
 export const siteYear = 2026;
 
 export const nav = [
+  { href: "#top", label: "Accueil" },
   { href: "#cabinet", label: "Le cabinet" },
   { href: "#domaines", label: "Domaines" },
   { href: "#deroule", label: "Déroulé" },
   { href: "#honoraires", label: "Honoraires" },
+  { href: "#rendez-vous", label: "Contact" },
 ] as const;
 
 export const bookingModes = [
@@ -110,6 +112,11 @@ export const defaultContent: SiteContent = {
     eyebrow: "Avocate · Barreau de Paris",
     title: "Défendre vos droits, avec rigueur et humanité.",
     lead: "Un accompagnement juridique clair, de la première consultation jusqu’à la décision. Écoute attentive, stratégie sur mesure, honnêteté sur les chances de succès.",
+    highlights: [
+      { title: "Une écoute attentive", text: "Exposez votre situation en toute confidentialité, sous le secret professionnel." },
+      { title: "Un dossier analysé", text: "Des options réalistes, un calendrier et un coût annoncés avant d’agir." },
+      { title: "Un rendez-vous rapide", text: "Réponse sous un jour ouvré, au cabinet, en visio ou par téléphone." },
+    ],
   },
   about: {
     eyebrow: "Le cabinet",
@@ -133,6 +140,7 @@ export const defaultContent: SiteContent = {
       title: "Droit de la famille",
       text: "Traverser une séparation ou un conflit familial avec un cadre clair, dans l’intérêt de chacun et, surtout, des enfants.",
       items: ["Divorce et séparation", "Garde et pension alimentaire", "Succession et partage"],
+      imageUrl: null,
     },
     {
       id: "travail",
@@ -140,6 +148,7 @@ export const defaultContent: SiteContent = {
       title: "Droit du travail",
       text: "Faire respecter vos droits de salarié, ou sécuriser vos décisions d’employeur, avant que le conflit ne s’installe.",
       items: ["Licenciement et rupture conventionnelle", "Harcèlement, discrimination", "Prud’hommes"],
+      imageUrl: null,
     },
     {
       id: "penal",
@@ -147,6 +156,7 @@ export const defaultContent: SiteContent = {
       title: "Droit pénal",
       text: "Être assisté dès la garde à vue, comprendre la procédure et préparer une défense solide à chaque étape.",
       items: ["Garde à vue, audition", "Défense devant les juridictions", "Victimes : constitution de partie civile"],
+      imageUrl: null,
     },
     {
       id: "immobilier",
@@ -154,6 +164,7 @@ export const defaultContent: SiteContent = {
       title: "Droit immobilier",
       text: "Sécuriser un achat, résoudre un litige de voisinage, de copropriété ou de bail, sans perdre des mois en procédure.",
       items: ["Baux d’habitation et commerciaux", "Copropriété", "Litiges de construction"],
+      imageUrl: null,
     },
   ],
   steps: [
