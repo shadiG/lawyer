@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { booking } from "./content";
+import { bookingModes, bookingWindows } from "./content";
 
-const modes = booking.modes.map((m) => m.value) as [string, ...string[]];
-const windows = booking.windows.map((w) => w.value) as [string, ...string[]];
-const motifs = [...booking.motifs] as [string, ...string[]];
+const modes = bookingModes.map((m) => m.value) as [string, ...string[]];
+const windows = bookingWindows.map((w) => w.value) as [string, ...string[]];
 
 export const bookingSchema = z.object({
   name: z
@@ -17,7 +16,8 @@ export const bookingSchema = z.object({
     .trim()
     .max(20, "Ce numéro est trop long.")
     .regex(/^[+0-9 .()-]*$/, "Utilisez uniquement des chiffres."),
-  motif: z.enum(motifs, { error: "Choisissez le sujet de votre demande." }),
+  // Les sujets viennent de l'admin : on borne la longueur plutôt que de figer une liste.
+  motif: z.string().trim().min(1, "Choisissez le sujet de votre demande.").max(60),
   mode: z.enum(modes, { error: "Choisissez un mode de rendez-vous." }),
   day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choisissez un jour."),
   window: z.enum(windows, { error: "Choisissez un moment de la journée." }),

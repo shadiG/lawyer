@@ -1,12 +1,17 @@
 "use server";
 
+import config from "@payload-config";
 import { headers } from "next/headers";
-import { Resend } from "resend";
-import { booking, site } from "./content";
+import { getPayload } from "payload";
+import { isDayAvailable, todayParis } from "./availability";
+import { acknowledgementEmail } from "./booking-emails";
+import { getContent } from "./cms";
+import { bookingModes, bookingWindows } from "./content";
+import { sendMail } from "./mail";
 import { bookingSchema, type BookingField, type BookingState } from "./booking-schema";
 
 // Limitation de débit en mémoire : suffisante pour une instance unique
-// (un conteneur Coolify). À remplacer par un store partagé si l’on scale.
+// (un conteneur Coolify). À remplacer par un store partagé si l'on scale.
 const hits = new Map<string, number[]>();
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_HITS = 3;
@@ -20,7 +25,7 @@ function tooMany(ip: string) {
   return recent.length > MAX_HITS;
 }
 
-const label = <T extends readonly { value: string; label: string }[]>(list: T, value: string) =>
+const label = (list: readonly { value: string; label: string }[], value: string) =>
   list.find((i) => i.value === value)?.label ?? value;
 
 function formatDay(iso: string) {
@@ -33,15 +38,6 @@ function formatDay(iso: string) {
   }).format(new Date(`${iso}T12:00:00Z`));
 }
 
-/** Un jour ouvré (lun.–ven.) dans les 90 prochains jours. */
-function validDay(iso: string) {
-  const date = new Date(`${iso}T12:00:00Z`);
-  if (Number.isNaN(date.getTime())) return false;
-  const dow = date.getUTCDay();
-  const diff = (date.getTime() - Date.now()) / 86_400_000;
-  return dow !== 0 && dow !== 6 && diff > -1 && diff < 90;
-}
-
 const oneLine = (s: string) => s.replace(/[\r\n]+/g, " ").trim();
 
 export async function submitBooking(_prev: BookingState, formData: FormData): Promise<BookingState> {
@@ -51,7 +47,7 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
     ),
   ) as Record<BookingField, string>;
 
-  // Robot détecté : on répond « succès » sans rien envoyer.
+  // Robot détecté : on répond « succès » sans rien enregistrer ni envoyer.
   if (raw.website) return { status: "success" };
 
   const parsed = bookingSchema.safeParse(raw);
@@ -65,7 +61,10 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
   }
   const data = parsed.data;
 
-  if (!validDay(data.day)) {
+  const content = await getContent();
+  const { site, availability } = content;
+
+  if (!isDayAvailable(data.day, availability, todayParis())) {
     return { status: "error", errors: { day: "Ce jour n’est plus disponible, choisissez-en un autre." }, values: raw };
   }
 
@@ -79,6 +78,30 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
     };
   }
 
+  // 1) Persistance dans l'administration : la source de vérité.
+  let saved = false;
+  try {
+    const payload = await getPayload({ config });
+    await payload.create({
+      collection: "bookings",
+      data: {
+        status: "nouveau",
+        name: oneLine(data.name),
+        email: data.email,
+        phone: data.phone || undefined,
+        motif: data.motif,
+        mode: data.mode as "cabinet" | "visio" | "telephone",
+        day: data.day,
+        window: data.window as "matin" | "apres-midi" | "fin-journee",
+        message: data.message || undefined,
+      },
+    });
+    saved = true;
+  } catch (err) {
+    console.error("Échec d’enregistrement de la demande de rendez-vous :", err);
+  }
+
+  // 2) Notification par e-mail : filet de sécurité et confort.
   const subject = `Demande de rendez-vous · ${oneLine(data.name)} · ${formatDay(data.day)}`;
   const text = [
     "Nouvelle demande de rendez-vous reçue depuis le site.",
@@ -87,49 +110,38 @@ export async function submitBooking(_prev: BookingState, formData: FormData): Pr
     `E-mail : ${data.email}`,
     `Téléphone : ${data.phone || "non renseigné"}`,
     `Sujet : ${data.motif}`,
-    `Mode : ${label(booking.modes, data.mode)}`,
+    `Mode : ${label(bookingModes, data.mode)}`,
     `Jour souhaité : ${formatDay(data.day)}`,
-    `Moment : ${label(booking.windows, data.window)}`,
+    `Moment : ${label(bookingWindows, data.window)}`,
     "",
     "Message :",
     data.message || "(aucun)",
   ].join("\n");
 
-  const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.BOOKING_TO_EMAIL;
-  const from = process.env.BOOKING_FROM_EMAIL;
+  let mailed = false;
 
-  if (!apiKey || !to || !from) {
-    if (process.env.NODE_ENV !== "production") {
-      // En développement : on affiche la demande au lieu de l’envoyer.
-      console.log(`\n--- Demande de rendez-vous (mode développement) ---\n${subject}\n\n${text}\n`);
-      return { status: "success" };
-    }
-    console.error("Réservation impossible : RESEND_API_KEY, BOOKING_TO_EMAIL ou BOOKING_FROM_EMAIL manquant.");
-    return {
-      status: "error",
-      message: `L’envoi en ligne est momentanément indisponible. Merci d’appeler le ${site.phone}.`,
-      values: raw,
-    };
+  if (to) {
+    const r = await sendMail({ to, replyTo: data.email, subject, text });
+    mailed = r.status === "sent" || r.status === "logged";
+    if (r.status === "failed") console.error("Échec d’envoi de l’e-mail de rendez-vous :", r.error);
+  } else if (process.env.NODE_ENV !== "production") {
+    console.log(`\n--- Demande de rendez-vous (mode développement) ---\n${subject}\n\n${text}\n`);
+    mailed = true;
   }
 
-  try {
-    const { error } = await new Resend(apiKey).emails.send({
-      from,
-      to,
-      replyTo: data.email,
-      subject,
-      text,
-    });
-    if (error) throw new Error(error.message);
-  } catch (err) {
-    console.error("Échec d’envoi de la demande de rendez-vous :", err);
-    return {
-      status: "error",
-      message: `Votre demande n’a pas pu être envoyée. Réessayez ou appelez le ${site.phone}.`,
-      values: raw,
-    };
+  // Succès dès que la demande est quelque part où l'avocat la verra.
+  if (saved || mailed) {
+    // Accusé de réception au client : un échec ne doit jamais faire échouer la demande.
+    const ack = acknowledgementEmail(site, { name: oneLine(data.name), day: data.day, window: data.window });
+    const r = await sendMail({ to: data.email, replyTo: site.email, ...ack });
+    if (r.status === "failed") console.error("Échec de l’accusé de réception :", r.error);
+    return { status: "success" };
   }
 
-  return { status: "success" };
+  return {
+    status: "error",
+    message: `Votre demande n’a pas pu être enregistrée. Réessayez ou appelez le ${site.phone}.`,
+    values: raw,
+  };
 }

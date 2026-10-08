@@ -1,100 +1,110 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
-import { hero, site } from "../_lib/content";
-import { Button, Eyebrow } from "./button";
-import { Clock, Shield } from "./icons";
+import { motion } from "motion/react";
+import type { SiteContent } from "../_lib/content";
+import { Button } from "./button";
+import { Layers, Search, User } from "./icons";
 import { Portrait } from "./portrait";
-import { SplitHeading } from "./reveal";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
+const highlightIcons = [Layers, Search, User];
 
-export function Hero() {
-  const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  // Parallaxe légère : le portrait remonte moins vite que la page.
-  const portraitY = useTransform(scrollYProgress, [0, 1], ["0%", "12%"]);
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "-6%"]);
+/** Met en bleu la fin de la phrase : après la dernière virgule, sinon les deux derniers mots. */
+function splitTitle(title: string): [string, string] {
+  const comma = title.lastIndexOf(",");
+  if (comma > 0) return [title.slice(0, comma + 1), title.slice(comma + 1).trim()];
+  const words = title.split(" ");
+  if (words.length < 3) return [title, ""];
+  return [words.slice(0, -2).join(" "), words.slice(-2).join(" ")];
+}
+
+export function Hero({ hero, site }: { hero: SiteContent["hero"]; site: SiteContent["site"] }) {
+  const [lead, accent] = splitTitle(hero.title);
 
   return (
-    <section
-      id="top"
-      ref={ref}
-      className="relative mx-auto grid min-h-[100dvh] max-w-7xl overflow-x-clip items-center gap-12 px-4 pb-20 pt-32 md:grid-cols-12 md:gap-8 md:px-8 md:pt-36 lg:pb-28"
-    >
-      {/* Halo chaud, décoratif et statique */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-40 top-10 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(closest-side,rgb(195_160_116/0.28),transparent)]"
-      />
+    <section className="relative">
+      {/* Fond clair sobre, en biais comme la maquette */}
+      <div aria-hidden="true" className="absolute inset-0 overflow-hidden bg-[linear-gradient(180deg,#eef1f6,#e4e9f1)]">
+        <div className="absolute -right-24 top-0 h-full w-2/3 -skew-x-12 bg-white/55" />
+      </div>
 
-      <motion.div style={{ y: textY }} className="relative md:col-span-7">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: EASE }}
-        >
-          <Eyebrow>{hero.eyebrow}</Eyebrow>
-        </motion.div>
+      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-32 pt-12 md:px-8 lg:min-h-[34rem] lg:grid-cols-12 lg:gap-8 lg:pb-36 lg:pt-14">
+        <div className="lg:col-span-7">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+          >
+            <p className="display text-[1.5rem] text-brass">{hero.eyebrow}</p>
+            <span className="mt-2 block h-[3px] w-14 bg-brass" />
+          </motion.div>
 
-        <SplitHeading
-          as="h1"
-          immediate
-          delay={0.15}
-          text={hero.title}
-          className="display mt-8 text-[clamp(2.9rem,8.2vw,6.6rem)]"
-        />
+          <motion.h1
+            className="display mt-6 text-[clamp(2.4rem,5.6vw,4.4rem)] text-ink"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE, delay: 0.08 }}
+          >
+            {lead} {accent ? <span className="text-brass">{accent}</span> : null}
+          </motion.h1>
 
-        <motion.p
-          className="prose-fr mt-8 max-w-xl text-lg leading-relaxed text-ink-soft"
-          initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ duration: 0.9, ease: EASE, delay: 0.7 }}
-        >
-          {hero.lead}
-        </motion.p>
+          <motion.p
+            className="prose-fr mt-6 max-w-xl text-[1.08rem] leading-relaxed text-ink-soft"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
+          >
+            {hero.lead}
+          </motion.p>
 
-        <motion.div
-          className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: EASE, delay: 0.85 }}
-        >
-          <Button href="#rendez-vous">Prendre rendez-vous</Button>
-          <a href="#cabinet" className="link-draw py-1 text-[0.95rem] text-ink-soft hover:text-ink">
-            Découvrir le cabinet
-          </a>
-        </motion.div>
-
-        <motion.ul
-          className="mt-14 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-soft"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, ease: EASE, delay: 1.1 }}
-        >
-          <li className="flex items-center gap-2">
-            <Shield className="text-lg text-brass" /> Secret professionnel
-          </li>
-          <li className="flex items-center gap-2">
-            <Clock className="text-lg text-brass" /> Réponse sous {site.responseTime}
-          </li>
-        </motion.ul>
-      </motion.div>
-
-      <motion.div
-        style={{ y: portraitY }}
-        className="relative mx-auto w-full max-w-sm md:col-span-5 md:max-w-none"
-        initial={{ opacity: 0, y: 40, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 1.2, ease: EASE, delay: 0.2 }}
-      >
-        <Portrait className="aspect-[4/5.4] w-full" />
-        <div className="glass absolute -bottom-5 -left-3 rounded-2xl bg-paper/80 px-5 py-4 shadow-[0_18px_50px_-18px_rgb(20_24_29/0.3),inset_0_1px_0_rgb(255_255_255/0.7)] ring-1 ring-ink/10 backdrop-blur-xl md:-left-10">
-          <p className="text-[0.65rem] uppercase tracking-[0.2em] text-ink-faint">Consultations</p>
-          <p className="mt-1 text-sm text-ink">Au cabinet, en visio ou par téléphone</p>
+          <motion.div
+            className="mt-9 flex flex-wrap items-center gap-4"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE, delay: 0.32 }}
+          >
+            <Button href="#rendez-vous">Prendre rendez-vous</Button>
+            <Button href="#cabinet" variant="outline" icon={false}>
+              Découvrir le cabinet
+            </Button>
+          </motion.div>
         </div>
-      </motion.div>
+
+        <motion.div
+          className="mx-auto w-full max-w-sm lg:col-span-5 lg:max-w-none lg:pl-10"
+          initial={{ opacity: 0, x: 28 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.9, ease: EASE, delay: 0.15 }}
+        >
+          <Portrait site={site} className="aspect-[4/4.6] w-full lg:ml-auto lg:max-w-md" />
+        </motion.div>
+      </div>
+
+      {/* Bandeau bleu des atouts, à cheval sur le bas du hero */}
+      <div className="relative z-10 mx-auto -mt-20 max-w-7xl px-4 md:px-8 lg:-mt-24">
+        <motion.ul
+          className="grid gap-px bg-white/15 bg-brass shadow-[0_24px_50px_-24px_rgb(11_73_179/0.6)] md:grid-cols-3"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: EASE, delay: 0.45 }}
+        >
+          {hero.highlights.slice(0, 3).map((h, i) => {
+            const Icon = highlightIcons[i % highlightIcons.length];
+            return (
+              <li key={h.title} className="flex items-start gap-5 bg-brass px-7 py-8 text-white">
+                {/* Pastille blanche avec ombre décalée, comme la maquette */}
+                <span className="relative grid size-14 shrink-0 place-items-center bg-white text-[1.6rem] text-brass shadow-[5px_5px_0_rgb(255_255_255/0.28)]">
+                  <Icon />
+                </span>
+                <span>
+                  <span className="display block text-[1.15rem]">{h.title}</span>
+                  <span className="mt-1.5 block text-[0.88rem] leading-relaxed text-white/80">{h.text}</span>
+                </span>
+              </li>
+            );
+          })}
+        </motion.ul>
+      </div>
     </section>
   );
 }

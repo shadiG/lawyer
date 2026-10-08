@@ -5,7 +5,8 @@ import { useActionState, useState, useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
 import { submitBooking } from "../_lib/booking-action";
 import { initialBookingState, type BookingField, type BookingState } from "../_lib/booking-schema";
-import { booking } from "../_lib/content";
+import { availableDays } from "../_lib/availability";
+import { bookingModes, bookingWindows, type Availability } from "../_lib/content";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 
@@ -21,31 +22,31 @@ const useMounted = () =>
 
 type Day = { value: string; weekday: string; day: string; month: string };
 
-function upcomingDays(count = 12): Day[] {
-  const out: Day[] = [];
+const pad = (n: number) => String(n).padStart(2, "0");
+const localIso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+/**
+ * Les prochains jours proposés, avec les mêmes règles que le serveur (module
+ * partagé `availability`) : jours ouverts, hors jours fermés, délai minimum.
+ */
+function upcomingDays(a: Availability): Day[] {
   const weekday = new Intl.DateTimeFormat("fr-FR", { weekday: "short" });
   const month = new Intl.DateTimeFormat("fr-FR", { month: "short" });
-  const d = new Date();
-  d.setHours(12, 0, 0, 0);
-  while (out.length < count) {
-    d.setDate(d.getDate() + 1);
-    const dow = d.getDay();
-    if (dow === 0 || dow === 6) continue;
-    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    out.push({
-      value: iso,
+  return availableDays(a, localIso(new Date())).map((value) => {
+    const d = new Date(`${value}T12:00:00`);
+    return {
+      value,
       weekday: weekday.format(d).replace(".", ""),
       day: String(d.getDate()),
       month: month.format(d).replace(".", ""),
-    });
-  }
-  return out;
+    };
+  });
 }
 
 /* ---------- briques de formulaire ---------- */
 
 const input =
-  "w-full rounded-2xl bg-paper px-4 py-3.5 text-[1rem] text-ink ring-1 ring-ink/10 transition-[box-shadow,background-color] duration-200 placeholder:text-ink-faint focus:bg-white focus:outline-none focus:ring-2 focus:ring-brass aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-[#a4372c]";
+  "w-full rounded-md bg-paper-deep px-4 py-3.5 text-[1rem] text-ink ring-1 ring-ink/10 transition-[box-shadow,background-color] duration-200 placeholder:text-ink-faint focus:bg-white focus:outline-none focus:ring-2 focus:ring-brass aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-[#a4372c]";
 
 function Field({
   id,
@@ -102,7 +103,7 @@ function ChipGroup({
         {options.map((o) => (
           <label key={o.value} className="relative cursor-pointer">
             <input type="radio" name={name} value={o.value} defaultChecked={defaultValue === o.value} className="peer sr-only" />
-            <span className="press block rounded-full bg-paper px-4 py-2.5 text-sm text-ink ring-1 ring-ink/10 transition-[background-color,color,box-shadow] duration-200 peer-checked:bg-ink peer-checked:text-paper peer-checked:ring-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brass hover:ring-ink/30">
+            <span className="press block rounded-md bg-paper-deep px-4 py-2.5 text-sm text-ink ring-1 ring-ink/10 transition-[background-color,color,box-shadow] duration-200 peer-checked:bg-brass peer-checked:text-white peer-checked:ring-brass peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brass hover:ring-ink/30">
               {o.label}
               {o.detail ? <span className="ml-1.5 opacity-60">{o.detail}</span> : null}
             </span>
@@ -120,13 +121,13 @@ function Submit() {
     <button
       type="submit"
       disabled={pending}
-      className="group press flex w-full items-center justify-between gap-3 rounded-full bg-ink py-2 pl-7 pr-2 text-[1rem] font-medium text-paper transition-opacity disabled:opacity-80"
+      className="group press flex w-full items-center justify-between gap-3 rounded-sm bg-brass py-2 pl-7 pr-2 text-[0.82rem] font-semibold uppercase tracking-[0.12em] text-white transition-colors duration-200 hover:bg-brass-dark disabled:opacity-80"
     >
       <span>{pending ? "Envoi en cours…" : "Envoyer ma demande"}</span>
-      <span className="grid size-11 place-items-center rounded-full bg-paper/15">
+      <span className="grid size-11 place-items-center rounded-sm bg-white/15">
         {pending ? (
           <motion.span
-            className="size-4 rounded-full border-2 border-paper/30 border-t-paper"
+            className="size-4 rounded-full border-2 border-white/30 border-t-white"
             animate={{ rotate: 360 }}
             transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
           />
@@ -142,10 +143,10 @@ function Submit() {
 
 /* ---------- formulaire ---------- */
 
-function Form({ onDone }: { onDone: () => void }) {
+function Form({ motifs, availability, onDone }: { motifs: string[]; availability: Availability; onDone: () => void }) {
   const [state, action] = useActionState<BookingState, FormData>(submitBooking, initialBookingState);
   const mounted = useMounted();
-  const [days] = useState<Day[]>(() => (typeof window === "undefined" ? [] : upcomingDays()));
+  const [days] = useState<Day[]>(() => (typeof window === "undefined" ? [] : upcomingDays(availability)));
   const e = state.errors ?? {};
   const v = state.values ?? {};
   // Une erreur disparaît dès que l'on modifie le champ, jusqu'au prochain envoi.
@@ -177,7 +178,7 @@ function Form({ onDone }: { onDone: () => void }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: EASE }}
-            className="rounded-2xl bg-[#a4372c]/10 px-4 py-3 text-sm text-[#7d2a21] ring-1 ring-[#a4372c]/25"
+            className="rounded-md bg-[#a4372c]/10 px-4 py-3 text-sm text-[#7d2a21] ring-1 ring-[#a4372c]/25"
           >
             {state.message}
           </motion.p>
@@ -187,12 +188,12 @@ function Form({ onDone }: { onDone: () => void }) {
       <ChipGroup
         legend="Sujet de votre demande"
         name="motif"
-        options={booking.motifs.map((m) => ({ value: m, label: m }))}
+        options={motifs.map((m) => ({ value: m, label: m }))}
         defaultValue={v.motif}
         error={err("motif")}
       />
 
-      <ChipGroup legend="Mode de rendez-vous" name="mode" options={[...booking.modes]} defaultValue={v.mode} error={err("mode")} />
+      <ChipGroup legend="Mode de rendez-vous" name="mode" options={[...bookingModes]} defaultValue={v.mode} error={err("mode")} />
 
       <fieldset aria-describedby="day-error" className="min-w-0">
         <legend className="mb-2 text-sm font-medium text-ink">Jour souhaité</legend>
@@ -201,19 +202,19 @@ function Form({ onDone }: { onDone: () => void }) {
             ? days.map((d) => (
                 <label key={d.value} className="relative shrink-0 cursor-pointer snap-start">
                   <input type="radio" name="day" value={d.value} defaultChecked={v.day === d.value} className="peer sr-only" />
-                  <span className="press flex w-[4.25rem] flex-col items-center rounded-2xl bg-paper px-2 py-3 ring-1 ring-ink/10 transition-[background-color,color,box-shadow] duration-200 peer-checked:bg-ink peer-checked:text-paper peer-checked:ring-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brass hover:ring-ink/30">
+                  <span className="press flex w-[4.25rem] flex-col items-center rounded-md bg-paper-deep px-2 py-3 ring-1 ring-ink/10 transition-[background-color,color,box-shadow] duration-200 peer-checked:bg-brass peer-checked:text-white peer-checked:ring-brass peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brass hover:ring-ink/30">
                     <span className="text-[0.65rem] uppercase tracking-[0.12em] opacity-60">{d.weekday}</span>
                     <span className="display my-0.5 text-[1.6rem] leading-none">{d.day}</span>
                     <span className="text-[0.65rem] uppercase tracking-[0.12em] opacity-60">{d.month}</span>
                   </span>
                 </label>
               ))
-            : Array.from({ length: 6 }, (_, i) => <span key={i} className="h-[5.25rem] w-[4.25rem] shrink-0 rounded-2xl bg-ink/[0.05]" />)}
+            : Array.from({ length: 6 }, (_, i) => <span key={i} className="h-[5.25rem] w-[4.25rem] shrink-0 rounded-md bg-ink/[0.05]" />)}
         </div>
         <FieldError id="day-error" error={err("day")} />
       </fieldset>
 
-      <ChipGroup legend="Moment de la journée" name="window" options={[...booking.windows]} defaultValue={v.window} error={err("window")} />
+      <ChipGroup legend="Moment de la journée" name="window" options={[...bookingWindows]} defaultValue={v.window} error={err("window")} />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="name" label="Nom et prénom" error={err("name")}>
@@ -237,7 +238,7 @@ function Form({ onDone }: { onDone: () => void }) {
 
       <div>
         <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-ink-soft">
-          <input type="checkbox" name="consent" defaultChecked={false} aria-invalid={!!err("consent")} aria-describedby="consent-error" className="mt-1 size-4 shrink-0 accent-[#14181d]" />
+          <input type="checkbox" name="consent" defaultChecked={false} aria-invalid={!!err("consent")} aria-describedby="consent-error" className="mt-1 size-4 shrink-0 accent-[#0b49b3]" />
           <span>
             J’accepte que ces informations soient utilisées pour traiter ma demande, conformément à la{" "}
             <a href="/confidentialite" className="link-draw text-ink">politique de confidentialité</a>.
@@ -260,7 +261,7 @@ function Success({ onDone }: { onDone: () => void }) {
       transition={{ duration: 0.6, ease: EASE }}
       className="py-10 text-center"
     >
-      <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="#7a5a32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="#0b49b3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto" aria-hidden="true">
         <motion.circle cx="32" cy="32" r="28" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.7, ease: EASE }} />
         <motion.path d="m21 33 8 8 15-17" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, ease: EASE, delay: 0.5 }} />
       </svg>
@@ -275,8 +276,8 @@ function Success({ onDone }: { onDone: () => void }) {
   );
 }
 
-export function BookingForm() {
+export function BookingForm({ motifs, availability }: { motifs: string[]; availability: Availability }) {
   // Changer la clé remonte un formulaire vierge après un succès.
   const [key, setKey] = useState(0);
-  return <Form key={key} onDone={() => setKey((k) => k + 1)} />;
+  return <Form key={key} motifs={motifs} availability={availability} onDone={() => setKey((k) => k + 1)} />;
 }

@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { site } from "../_lib/content";
+import type { SiteContent } from "../_lib/content";
 
 export function LegalPage({
+  site,
   title,
   updated,
   children,
 }: {
+  site: SiteContent["site"];
   title: string;
   updated: string;
   children: React.ReactNode;

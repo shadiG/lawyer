@@ -1,42 +1,38 @@
-import { site } from "../_lib/content";
+import Image from "next/image";
+import type { SiteContent } from "../_lib/content";
+import { Scales } from "./icons";
 
 /**
- * Portrait provisoire : une arche architecturale avec monogramme.
- * Pour une vraie photo, remplacez le contenu de l’arche par un <Image fill />
- * (fichier dans /public) en gardant les mêmes classes d’arrondi.
+ * Portrait de l'avocat, avec un cadre bleu décalé derrière.
+ * Avec une photo (médiathèque de l'admin) : la photo. Sans photo : un panneau
+ * illustré avec le monogramme, pour que la page soit complète dès le départ.
  */
-export function Portrait({ className = "" }: { className?: string }) {
+export function Portrait({ site, className = "" }: { site: SiteContent["site"]; className?: string }) {
   return (
-    <div
-      className={`rounded-t-[999px] rounded-b-[2rem] bg-ink/[0.05] p-2 ring-1 ring-ink/10 ${className}`}
-    >
-      <div className="relative h-full w-full overflow-hidden rounded-t-[calc(999px-0.5rem)] rounded-b-[calc(2rem-0.5rem)] bg-night shadow-[inset_0_1px_0_rgb(255_255_255/0.15)]">
-        {/* Lumière chaude venant du haut */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_0%,rgb(195_160_116/0.55),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(80%_50%_at_50%_100%,rgb(122_90_50/0.35),transparent_70%)]" />
-
-        {/* Arcs concentriques fins */}
-        <svg
-          className="absolute inset-0 h-full w-full"
-          viewBox="0 0 400 560"
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-          fill="none"
-          stroke="rgb(245 240 230)"
-          strokeOpacity="0.14"
-          strokeWidth="1"
-        >
-          {[150, 120, 90, 60].map((r) => (
-            <path key={r} d={`M${200 - r} 560V${230}a${r} ${r} 0 0 1 ${r * 2} 0V560`} />
-          ))}
-        </svg>
-
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 pb-10 text-paper">
-          <span className="display text-[5.5rem] leading-none">{site.monogram}</span>
-          <span className="text-[0.65rem] uppercase tracking-[0.3em] text-paper/70">
-            {site.barreau}
-          </span>
-        </div>
+    <div className={`relative ${className}`}>
+      <div aria-hidden="true" className="absolute -bottom-4 -right-4 h-full w-full bg-brass" />
+      <div className="relative h-full w-full overflow-hidden bg-night">
+        {site.portraitUrl ? (
+          <Image
+            src={site.portraitUrl}
+            alt={site.portraitAlt ?? `Portrait de ${site.lawyer}`}
+            fill
+            priority
+            sizes="(min-width: 1024px) 38vw, 90vw"
+            className="object-cover"
+          />
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-[linear-gradient(160deg,#243044_0%,#16191e_70%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(90%_60%_at_80%_0%,rgb(106_160_255/0.28),transparent_65%)]" />
+            <Scales className="absolute -right-10 -top-6 text-[18rem] text-white/[0.05]" />
+            <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-2 p-8 text-white">
+              <span className="display text-[4.5rem] leading-none">{site.monogram}</span>
+              <span className="h-[3px] w-12 bg-brass-bright" />
+              <span className="text-[0.7rem] font-medium uppercase tracking-[0.24em] text-white/70">{site.lawyer}</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

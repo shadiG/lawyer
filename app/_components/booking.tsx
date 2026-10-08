@@ -1,46 +1,43 @@
-import { booking, site } from "../_lib/content";
+import type { SiteContent } from "../_lib/content";
 import { BookingForm } from "./booking-form";
-import { Eyebrow } from "./button";
 import { Clock, Mail, Phone, Pin, Shield } from "./icons";
-import { Reveal, SplitHeading } from "./reveal";
+import { Reveal } from "./reveal";
+import { SectionHeading } from "./section-heading";
 
-export function Booking() {
+export function Booking({ booking, site, availability }: { booking: SiteContent["booking"]; site: SiteContent["site"]; availability: SiteContent["availability"] }) {
   return (
     <section id="rendez-vous" className="bg-paper-deep">
-      <div className="mx-auto grid max-w-7xl gap-14 px-4 py-28 md:grid-cols-12 md:gap-8 md:px-8 md:py-40">
-        <div className="md:col-span-5">
-          <div className="md:sticky md:top-32">
-            <Reveal>
-              <Eyebrow>{booking.eyebrow}</Eyebrow>
-            </Reveal>
-            <SplitHeading
-              text={booking.title}
-              className="display mt-7 text-[clamp(2.5rem,5.4vw,4.5rem)]"
-            />
-            <Reveal delay={0.1}>
-              <p className="prose-fr mt-7 max-w-md text-lg leading-relaxed text-ink-soft">{booking.lead}</p>
+      <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-28">
+        <SectionHeading title="Prendre rendez-vous" subtitle={`${booking.title} ${booking.lead}`} />
 
-              <ul className="mt-10 space-y-4 text-[0.95rem] text-ink-soft">
-                <li className="flex items-start gap-3">
-                  <Shield className="mt-0.5 shrink-0 text-xl text-brass" />
-                  Vos informations sont couvertes par le secret professionnel.
+        <div className="mt-14 grid gap-8 lg:grid-cols-12">
+          <Reveal className="lg:col-span-4">
+            <div className="on-night h-full bg-brass p-8 text-white md:p-10">
+              <h3 className="display text-[1.5rem]">Nous contacter</h3>
+              <span className="mt-3 block h-[3px] w-10 bg-white/60" />
+              <ul className="mt-8 space-y-6 text-[0.95rem]">
+                <li className="flex items-start gap-4">
+                  <Shield className="mt-0.5 shrink-0 text-2xl text-white/80" />
+                  <span className="text-white/85">Vos informations sont couvertes par le secret professionnel.</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <Phone className="mt-0.5 shrink-0 text-xl text-brass" />
-                  <a href={`tel:${site.phoneHref}`} className="link-draw text-ink">{site.phone}</a>
+                <li className="flex items-start gap-4">
+                  <Phone className="mt-0.5 shrink-0 text-2xl text-white/80" />
+                  <a href={`tel:${site.phoneHref}`} className="link-draw">{site.phone}</a>
                 </li>
-                <li className="flex items-start gap-3">
-                  <Mail className="mt-0.5 shrink-0 text-xl text-brass" />
-                  <a href={`mailto:${site.email}`} className="link-draw text-ink">{site.email}</a>
+                <li className="flex items-start gap-4">
+                  <Mail className="mt-0.5 shrink-0 text-2xl text-white/80" />
+                  <a href={`mailto:${site.email}`} className="link-draw break-all">{site.email}</a>
                 </li>
-                <li className="flex items-start gap-3">
-                  <Pin className="mt-0.5 shrink-0 text-xl text-brass" />
+                <li className="flex items-start gap-4">
+                  <Pin className="mt-0.5 shrink-0 text-2xl text-white/80" />
                   <span>
-                    {site.address.street}, {site.address.postalCode} {site.address.city}
+                    {site.address.street}
+                    <br />
+                    {site.address.postalCode} {site.address.city}
                   </span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <Clock className="mt-0.5 shrink-0 text-xl text-brass" />
+                <li className="flex items-start gap-4">
+                  <Clock className="mt-0.5 shrink-0 text-2xl text-white/80" />
                   <span>
                     {site.hours.map((h) => (
                       <span key={h.days} className="block">
@@ -50,16 +47,12 @@ export function Booking() {
                   </span>
                 </li>
               </ul>
-            </Reveal>
-          </div>
-        </div>
+            </div>
+          </Reveal>
 
-        <div className="min-w-0 md:col-span-7">
-          <Reveal>
-            <div className="rounded-[2.25rem] bg-ink/[0.05] p-2 ring-1 ring-ink/10">
-              <div className="relative rounded-[calc(2.25rem-0.5rem)] bg-paper-card p-6 shadow-[inset_0_1px_0_rgb(255_255_255/0.85)] sm:p-9">
-                <BookingForm />
-              </div>
+          <Reveal className="min-w-0 lg:col-span-8" delay={0.08}>
+            <div className="relative bg-white p-6 shadow-[0_24px_50px_-28px_rgb(18_22_29/0.4)] ring-1 ring-ink/[0.07] sm:p-9">
+              <BookingForm motifs={booking.motifs} availability={availability} />
             </div>
           </Reveal>
         </div>
