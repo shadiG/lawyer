@@ -14,6 +14,7 @@ import { SectionHeading } from "../../../_components/section-heading";
 import { getContent } from "../../../_lib/cms";
 import { siteUrl } from "../../../_lib/content";
 import { getPost, getPosts } from "../../../_lib/posts";
+import { connection } from "next/server";
 
 /**
  * Page dépendante de la base (articles publiés à tout moment) : un article inconnu
@@ -44,6 +45,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  // Rendu à chaque requête : jamais de contenu du CMS figé au build (voir docs/ops/vps.md).
+  await connection();
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post) return { title: "Article introuvable", robots: { index: false } };
@@ -64,6 +67,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Page({ params }: Props) {
+  // Rendu à chaque requête : jamais de contenu du CMS figé au build (voir docs/ops/vps.md).
+  await connection();
   const { slug } = await params;
   const [post, { site }, all] = await Promise.all([getPost(slug), getContent(), getPosts()]);
   if (!post) notFound();

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPage } from "../../_components/legal-page";
 import { getContent } from "../../_lib/cms";
+import { connection } from "next/server";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
 
 // ⚠️ Texte à faire valider par l'avocat : il décrit l'architecture actuelle du site.
 export default async function Page() {
+  // Rendu à chaque requête : jamais de contenu du CMS figé au build (voir docs/ops/vps.md).
+  await connection();
   const { site, legal } = await getContent();
   return (
     <LegalPage site={site} title="Politique de confidentialité" updated={legal.updated}>

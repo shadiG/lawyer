@@ -10,6 +10,7 @@ import { Process } from "../_components/process";
 import { getContent } from "../_lib/cms";
 import { getPosts } from "../_lib/posts";
 import { siteUrl, type SiteContent } from "../_lib/content";
+import { connection } from "next/server";
 
 
 function buildJsonLd(site: SiteContent["site"]) {
@@ -34,6 +35,8 @@ function buildJsonLd(site: SiteContent["site"]) {
 }
 
 export default async function Home() {
+  // Rendu à chaque requête : jamais de contenu du CMS figé au build (voir docs/ops/vps.md).
+  await connection();
   const [c, latest] = await Promise.all([getContent(), getPosts(3)]);
   const jsonLd = buildJsonLd(c.site);
   return (
