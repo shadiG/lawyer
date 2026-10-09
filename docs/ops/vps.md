@@ -12,6 +12,9 @@ Chaque push sur `main` lance `.github/workflows/vps.yml` : le CI d'abord (lint, 
 
 > ⚠️ **Avant le premier déploiement de l'administration**, les variables `PAYLOAD_SECRET` et `ADMIN_*` doivent exister dans Coolify. Sans `PAYLOAD_SECRET`, le conteneur s'arrête volontairement avec un message clair (il ne démarre pas à moitié configuré).
 
+
+> **Au démarrage**, le conteneur applique les migrations de la base, crée le premier administrateur et convertit d'éventuels anciens textes (`instrumentation.ts`) **avant** d'accepter la moindre requête. Si l'une de ces étapes échoue, le conteneur ne démarre pas : Coolify garde alors l'ancienne version en ligne. Les logs du déploiement indiquent la cause.
+
 ## Mise en place (une fois)
 
 ### 1. DNS

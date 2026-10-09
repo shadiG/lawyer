@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { PracticeIcon, SiteContent } from "../_lib/content";
 import { ArrowRight, Check, Family, Property, Scales, Work } from "./icons";
 import { Reveal } from "./reveal";
+import { RichBlock } from "./rich";
 import { SectionHeading } from "./section-heading";
 
 const icons: Record<PracticeIcon, React.ComponentType<{ className?: string }>> = {
@@ -42,7 +43,7 @@ function Card({ practice, index }: { practice: SiteContent["practices"][number];
             <Icon />
           </span>
           <h3 className="display text-[1.35rem]">{practice.title}</h3>
-          <p className="prose-fr mt-3 text-[0.93rem] leading-relaxed text-ink-soft">{practice.text}</p>
+          <RichBlock value={practice.text} className="prose-fr mt-3 text-[0.93rem] leading-relaxed text-ink-soft" />
           <ul className="mt-5 space-y-2 border-t border-ink/10 pt-5 text-[0.88rem] text-ink">
             {practice.items.map((item) => (
               <li key={item} className="flex items-start gap-2.5">

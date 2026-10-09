@@ -2,6 +2,7 @@ import * as migration_20261008_133126_initial from './20261008_133126_initial';
 import * as migration_20261008_142934_redesign_highlights_image from './20261008_142934_redesign_highlights_image';
 import * as migration_20261008_161810_rdv_avances from './20261008_161810_rdv_avances';
 import * as migration_20261008_163101_blog from './20261008_163101_blog';
+import * as migration_20261008_175312_wysiwyg_champs from './20261008_175312_wysiwyg_champs';
 
 export const migrations = [
   {
@@ -22,6 +23,11 @@ export const migrations = [
   {
     up: migration_20261008_163101_blog.up,
     down: migration_20261008_163101_blog.down,
-    name: '20261008_163101_blog'
+    name: '20261008_163101_blog',
+  },
+  {
+    up: migration_20261008_175312_wysiwyg_champs.up,
+    down: migration_20261008_175312_wysiwyg_champs.down,
+    name: '20261008_175312_wysiwyg_champs'
   },
 ];

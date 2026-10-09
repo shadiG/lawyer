@@ -46,3 +46,41 @@ test("isSafeHref : refuse javascript:, data:, vbscript: et leurs déguisements",
     assert.equal(isSafeHref(u), false, String(u));
   }
 });
+
+import { isEmptyRich, pickRich, plainToLexical, richToText } from "../app/_lib/blog";
+
+test("plainToLexical : paragraphes, sauts de ligne, texte vide", () => {
+  const s = plainToLexical("Premier paragraphe.\n\nSecond,\navec un saut de ligne.");
+  assert.equal(s.root.children.length, 2);
+  assert.equal(lexicalToText(s), "Premier paragraphe. Second, avec un saut de ligne.");
+  assert.equal(plainToLexical("").root.children.length, 0);
+  assert.equal(plainToLexical("  \n\n  ").root.children.length, 0);
+});
+
+test("plainToLexical : le texte est conservé tel quel (pas d'interprétation HTML)", () => {
+  assert.equal(lexicalToText(plainToLexical("<b>gras</b> & « guillemets »")), "<b>gras</b> & « guillemets »");
+});
+
+test("isEmptyRich : chaînes, états vides et entrées invalides", () => {
+  assert.equal(isEmptyRich(""), true);
+  assert.equal(isEmptyRich("   "), true);
+  assert.equal(isEmptyRich("texte"), false);
+  assert.equal(isEmptyRich(null), true);
+  assert.equal(isEmptyRich(undefined), true);
+  assert.equal(isEmptyRich({}), true);
+  assert.equal(isEmptyRich(plainToLexical("")), true);
+  assert.equal(isEmptyRich(plainToLexical("Bonjour")), false);
+});
+
+test("pickRich : prend le texte riche saisi, sinon le repli", () => {
+  const saisi = plainToLexical("Saisi dans l'admin");
+  assert.equal(pickRich(saisi, "Par défaut"), saisi);
+  assert.equal(pickRich(plainToLexical(""), "Par défaut"), "Par défaut");
+  assert.equal(pickRich(null, "Par défaut"), "Par défaut");
+  assert.equal(pickRich("une chaîne ne compte pas comme saisie riche", "Par défaut"), "Par défaut");
+});
+
+test("richToText : chaîne ou état de l'éditeur", () => {
+  assert.equal(richToText("  Un   texte \n simple "), "Un texte simple");
+  assert.equal(richToText(plainToLexical("Un.\n\nDeux.")), "Un. Deux.");
+});

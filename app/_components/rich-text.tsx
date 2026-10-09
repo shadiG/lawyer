@@ -5,7 +5,7 @@ import { isSafeHref } from "../_lib/blog";
 type Data = Parameters<typeof RichText>[0]["data"];
 
 /** Les images insérées dans l'éditeur : optimisées par Next, jamais plus larges que la colonne. */
-const converters: JSXConvertersFunction = ({ defaultConverters }) => {
+export const converters: JSXConvertersFunction = ({ defaultConverters }) => {
   // Liens internes (vers un autre article, un domaine) : résolus ici ; liens libres : contrôlés ci-dessous.
   const internal = LinkJSXConverter({
     internalDocToHref: ({ linkNode }) => {

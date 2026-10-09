@@ -1,4 +1,6 @@
 import type { CollectionConfig } from "payload";
+import { textEditor } from "../editors";
+import { legacyText, requireText } from "../fields";
 import { publishChanges } from "../hooks/revalidate";
 
 export const Practices: CollectionConfig = {
@@ -40,7 +42,9 @@ export const Practices: CollectionConfig = {
       label: "Image de la carte",
       admin: { description: "Facultatif. Format paysage conseillé (3:2). Sans image, un fond bleu avec l’icône est affiché." },
     },
-    { name: "text", type: "textarea", label: "Présentation", required: true, maxLength: 260 },
+    { name: "body", type: "richText", editor: textEditor, label: "Présentation", validate: requireText },
+    // Ancien champ texte : ne sert plus qu'à la conversion automatique (voir cms/seed.ts).
+    { name: "text", label: "Présentation (ancienne saisie)", ...legacyText },
     {
       name: "items",
       type: "array",

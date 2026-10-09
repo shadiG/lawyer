@@ -3,6 +3,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getPayload } from "payload";
 import { CMS_TAG } from "@/cms/hooks/revalidate";
 import type { Media } from "@/payload-types";
+import { isEmptyRich, pickRich } from "./blog";
 import { defaultContent as d, OTHER_MOTIF, toTelHref, type Availability, type PracticeIcon, type SiteContent } from "./content";
 
 /* Fusion « admin > défaut », champ par champ : un champ vidé retombe sur le défaut. */
@@ -54,7 +55,7 @@ export async function getContent(): Promise<SiteContent> {
         id: String(p.id),
         icon: ICONS.includes(p.icon as PracticeIcon) ? (p.icon as PracticeIcon) : "criminal",
         title: str(p.title, ""),
-        text: str(p.text, ""),
+        text: pickRich(p.body, str(p.text, "")),
         items: rows(p.items, (i) => str(i.text, "") || null, []),
         imageUrl: typeof p.image === "object" && p.image ? ((p.image as Media).sizes?.card?.url ?? (p.image as Media).url ?? null) : null,
       }),
@@ -85,23 +86,37 @@ export async function getContent(): Promise<SiteContent> {
       hero: {
         eyebrow: str(home.hero?.eyebrow, d.hero.eyebrow),
         title: str(home.hero?.title, d.hero.title),
-        lead: str(home.hero?.lead, d.hero.lead),
+        lead: pickRich(home.hero?.leadRich, str(home.hero?.lead, d.hero.lead as string)),
         highlights: rows(home.hero?.highlights, (h) => (h.title && h.text ? { title: h.title, text: h.text } : null), d.hero.highlights),
       },
       about: {
         eyebrow: d.about.eyebrow,
         title: str(home.about?.title, d.about.title),
-        paragraphs: rows(home.about?.paragraphs, (p) => str(p.text, "") || null, d.about.paragraphs),
+        body: pickRich(home.about?.body, rows(home.about?.paragraphs, (p) => str(p.text, "") || null, []).join("\n\n") || d.about.body),
         quote: str(home.about?.quote, d.about.quote),
         facts: rows(home.about?.facts, (f) => (f.label && f.value ? { label: f.label, value: f.value } : null), d.about.facts),
       },
       practices: practiceList,
-      steps: rows(home.steps, (s) => (s.title && s.text ? { title: s.title, text: s.text } : null), d.steps),
+      steps: rows(
+        home.steps,
+        (s) => {
+          const text = pickRich(s.body, s.text ?? "");
+          return s.title && !isEmptyRich(text) ? { title: s.title, text } : null;
+        },
+        d.steps,
+      ),
       fees: {
         eyebrow: d.fees.eyebrow,
         title: str(home.fees?.title, d.fees.title),
-        lead: str(home.fees?.lead, d.fees.lead),
-        items: rows(home.fees?.items, (i) => (i.title && i.text ? { title: i.title, text: i.text } : null), d.fees.items),
+        lead: pickRich(home.fees?.leadRich, str(home.fees?.lead, d.fees.lead as string)),
+        items: rows(
+          home.fees?.items,
+          (i) => {
+            const text = pickRich(i.body, i.text ?? "");
+            return i.title && !isEmptyRich(text) ? { title: i.title, text } : null;
+          },
+          d.fees.items,
+        ),
       },
       booking: {
         eyebrow: d.booking.eyebrow,

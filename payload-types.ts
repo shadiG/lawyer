@@ -272,6 +272,21 @@ export interface Practice {
    * Facultatif. Format paysage conseillé (3:2). Sans image, un fond bleu avec l’icône est affiché.
    */
   image?: (number | null) | Media;
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   text: string;
   items?:
     | {
@@ -444,6 +459,7 @@ export interface PracticesSelect<T extends boolean = true> {
   title?: T;
   icon?: T;
   image?: T;
+  body?: T;
   text?: T;
   items?:
     | T
@@ -647,6 +663,21 @@ export interface Home {
   hero: {
     eyebrow?: string | null;
     title: string;
+    leadRich?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
     lead?: string | null;
     highlights?:
       | {
@@ -658,6 +689,24 @@ export interface Home {
   };
   about?: {
     title?: string | null;
+    /**
+     * Plusieurs paragraphes possibles ; gras, italique, listes et liens disponibles dans la barre d’outils.
+     */
+    body?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
     paragraphs?:
       | {
           text: string;
@@ -679,16 +728,61 @@ export interface Home {
   steps?:
     | {
         title: string;
+        body?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
         text: string;
         id?: string | null;
       }[]
     | null;
   fees?: {
     title?: string | null;
+    leadRich?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
     lead?: string | null;
     items?:
       | {
           title: string;
+          body?: {
+            root: {
+              type: string;
+              children: {
+                type: any;
+                version: number;
+                [k: string]: unknown;
+              }[];
+              direction: ('ltr' | 'rtl') | null;
+              format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+              indent: number;
+              version: number;
+            };
+            [k: string]: unknown;
+          } | null;
           text: string;
           id?: string | null;
         }[]
@@ -764,6 +858,7 @@ export interface HomeSelect<T extends boolean = true> {
     | {
         eyebrow?: T;
         title?: T;
+        leadRich?: T;
         lead?: T;
         highlights?:
           | T
@@ -777,6 +872,7 @@ export interface HomeSelect<T extends boolean = true> {
     | T
     | {
         title?: T;
+        body?: T;
         paragraphs?:
           | T
           | {
@@ -796,6 +892,7 @@ export interface HomeSelect<T extends boolean = true> {
     | T
     | {
         title?: T;
+        body?: T;
         text?: T;
         id?: T;
       };
@@ -803,11 +900,13 @@ export interface HomeSelect<T extends boolean = true> {
     | T
     | {
         title?: T;
+        leadRich?: T;
         lead?: T;
         items?:
           | T
           | {
               title?: T;
+              body?: T;
               text?: T;
               id?: T;
             };

@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import type { SiteContent } from "../_lib/content";
 import { Quote, Scales, Shield } from "./icons";
 import { Reveal } from "./reveal";
+import { RichBlock } from "./rich";
 import { SectionHeading } from "./section-heading";
 
 const EASE = [0.23, 1, 0.32, 1] as const;
@@ -91,13 +92,7 @@ export function About({ about }: { about: SiteContent["about"] }) {
               transition={{ duration: 0.3, ease: EASE }}
             >
               {tab === "cabinet" ? (
-                <div className="space-y-5">
-                  {about.paragraphs.map((p, i) => (
-                    <p key={i} className="prose-fr leading-relaxed text-ink-soft">
-                      {p}
-                    </p>
-                  ))}
-                </div>
+                <RichBlock value={about.body} className="prose-fr space-y-5 leading-relaxed text-ink-soft" />
               ) : (
                 <dl className="divide-y divide-ink/10 border-y border-ink/10">
                   {about.facts.map((f) => (

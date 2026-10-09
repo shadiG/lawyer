@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { richToText } from "../_lib/blog";
 import { getContent } from "../_lib/cms";
 import { geist, sourceSerif } from "../_lib/fonts";
 import { siteUrl } from "../_lib/content";
@@ -7,7 +8,7 @@ import "../globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { site, hero } = await getContent();
-  const description = `${site.title}. ${hero.lead}`.slice(0, 280);
+  const description = `${site.title}. ${richToText(hero.lead)}`.slice(0, 280);
   return {
     metadataBase: new URL(siteUrl),
     title: { default: `${site.lawyer} · ${site.title}`, template: `%s · ${site.name}` },
