@@ -1,6 +1,6 @@
-# Site du cabinet sur le VPS (Coolify)
+# Déploiement du site du cabinet
 
-Le site est une app Next.js avec une administration intégrée (Payload CMS), servie par un seul conteneur construit par Coolify à partir du `Dockerfile` à la racine. Les données (base SQLite et photos téléversées) vivent dans un **volume persistant** monté sur `/data`.
+**Un seul conteneur contient tout** : le site, l'administration (Payload CMS), la base de données et les sauvegardes nocturnes. Rien à installer ni à configurer sur le serveur, à part un volume persistant : le reste se configure tout seul au premier démarrage.
 
 | Adresse | Rôle |
 | --- | --- |
@@ -8,51 +8,72 @@ Le site est une app Next.js avec une administration intégrée (Payload CMS), se
 | `https://lawyer.shadgramers.com/admin` | l'administration (voir [le guide de l'avocat](../admin-guide.md)) |
 | `https://lawyer.shadgramers.com/healthz` | santé du conteneur (200 `ok`) |
 
-Chaque push sur `main` lance `.github/workflows/vps.yml` : le CI d'abord (lint, types, build), puis un appel demande à Coolify de reconstruire. Un build rouge n'atteint jamais le serveur. Tant que les réglages GitHub ci-dessous n'existent pas, le workflow saute le déploiement avec un avis.
+## Pourquoi pas de conteneur de base de données ?
 
-> ⚠️ **Avant le premier déploiement de l'administration**, les variables `PAYLOAD_SECRET` et `ADMIN_*` doivent exister dans Coolify. Sans `PAYLOAD_SECRET`, le conteneur s'arrête volontairement avec un message clair (il ne démarre pas à moitié configuré).
+La base est **SQLite** : un fichier (`/data/payload.db`) dans le volume, pas un service séparé. Pour un site de cabinet c'est le choix le plus fiable : rien à démarrer, à relier ni à surveiller, et la sauvegarde est une copie de fichier (déjà automatisée). PostgreSQL ne se justifierait que pour partager la base entre plusieurs serveurs : ce serait une tranche de travail à part (adaptateur, migrations réécrites).
 
+## Ce qui est automatique
 
-> **Au démarrage**, le conteneur applique les migrations de la base, crée le premier administrateur et convertit d'éventuels anciens textes (`instrumentation.ts`) **avant** d'accepter la moindre requête. Si l'une de ces étapes échoue, le conteneur ne démarre pas : Coolify garde alors l'ancienne version en ligne. Les logs du déploiement indiquent la cause.
+Au premier démarrage, le conteneur :
 
-## Mise en place (une fois)
+1. **génère la clé de session** et la garde dans le volume (`/data/.payload-secret`) ;
+2. **crée le premier administrateur** (`admin@cabinet.local`, mot de passe aléatoire de 20 caractères) affiché **une fois** dans les logs, et écrit dans `/data/premiere-connexion.txt` ;
+3. **crée la base, applique les migrations** et charge le contenu par défaut **avant** d'accepter la moindre requête. Si une étape échoue, le conteneur ne démarre pas : Coolify garde l'ancienne version en ligne ;
+4. **lance les sauvegardes nocturnes** (voir [restauration](restauration.md)).
 
-### 1. DNS
-Un enregistrement `A` pour `lawyer.shadgramers.com` vers le VPS (ou le domaine réel du cabinet).
+Toute variable fournie l'emporte sur la valeur automatique. Redémarrages et redéploiements conservent tout (clé, comptes, contenu) : tout vit dans le volume. Le site ne fige aucun contenu à la construction : les pages sont rendues à la requête depuis la base.
 
-### 2. L'app dans Coolify
-1. Projet → **+ New** → **Private Repository (with GitHub App)** → `shadiG/lawyer`, branche `main`.
-2. Build Pack **Dockerfile**, Base Directory `/`, Dockerfile Location `/Dockerfile`.
-3. **Ports Exposes `3000`**.
-4. Domaine `https://lawyer.shadgramers.com`, sans port.
-5. **Persistent Storage** : ajouter un volume, destination dans le conteneur **`/data`**. Sans lui, la base et les photos disparaissent à chaque déploiement.
-6. Variables d'environnement :
+## Voie A : Coolify
 
-   | Nom | Valeur | Build Variable ? |
-   | --- | --- | --- |
-   | `NEXT_PUBLIC_SITE_URL` | `https://lawyer.shadgramers.com` | **oui** (figée au build) |
-   | `PAYLOAD_SECRET` | `openssl rand -hex 32` (≥ 32 caractères, à garder : il signe les sessions) | non |
-   | `ADMIN_EMAIL` | e-mail du premier administrateur | non |
-   | `ADMIN_PASSWORD` | mot de passe solide, **à changer dans l'admin après la première connexion** | non |
-   | `ADMIN_ALLOWED_ORIGINS` | autres adresses d'accès à l'admin (ex. `https://www.exemple.fr`), séparées par des virgules. Facultatif | non |
-   | `RESEND_API_KEY` | clé API Resend. Facultatif | non |
-   | `BOOKING_TO_EMAIL` | adresse qui reçoit les notifications. Facultatif | non |
-   | `BOOKING_FROM_EMAIL` | `Cabinet <rendez-vous@domaine-verifie>`. Facultatif | non |
+À faire une fois :
 
-   Les trois variables d'envoi sont facultatives pour **recevoir** les demandes : une demande de rendez-vous est toujours enregistrée dans l'administration. Elles deviennent nécessaires pour **écrire au client** (accusé de réception, confirmation ou refus depuis l'admin) : sans `RESEND_API_KEY` et `BOOKING_FROM_EMAIL`, l'admin affiche « E-mail non configuré » et le client n'est pas prévenu. Si l'enregistrement et l'e-mail échouent tous les deux, le visiteur voit un message l'invitant à téléphoner.
-7. Avancé → **Auto Deploy désactivé** : GitHub déclenche le déploiement après le CI.
-8. Déployer une première fois à la main. Au premier démarrage, la base est créée (migrations), le compte administrateur est créé depuis `ADMIN_*`, et l'administration est pré-remplie avec le contenu par défaut.
+1. **DNS** : un enregistrement `A` pour le domaine vers le VPS.
+2. Projet → **+ New** → **Private Repository (with GitHub App)** → `shadiG/lawyer`, branche `main`.
+3. Build Pack **Dockerfile**, Base Directory `/`, Dockerfile Location `/Dockerfile`.
+4. **Ports Exposes** : `3000`.
+5. **Domains** : `https://lawyer.shadgramers.com` (sans port).
+6. **Persistent Storage** : un volume, destination **`/data`**. C'est le seul réglage indispensable : un Dockerfile ne peut pas imposer un volume (c'est une propriété de l'hôte). Sans lui, base, photos, clé et sauvegardes disparaissent à chaque déploiement.
+7. **Environment Variables** : une seule recommandée, `NEXT_PUBLIC_SITE_URL=https://lawyer.shadgramers.com`, avec **Build Variable** coché (liens canoniques et plan du site).
+8. Avancé → **Auto Deploy désactivé** (GitHub déclenche le déploiement après le CI).
+9. **Deploy**.
 
-### 3. Première connexion
-Ouvrir `/admin`, se connecter avec `ADMIN_EMAIL` / `ADMIN_PASSWORD`, puis **changer le mot de passe** (Administration › Utilisateurs). Remplacer ensuite les textes provisoires (voir le guide de l'avocat) et les champs légaux (Cabinet › Mentions légales).
+**Première connexion** : logs du premier déploiement (bandeau « PREMIÈRE CONNEXION »), ou onglet Terminal puis `cat /data/premiere-connexion.txt`. Se connecter sur `/admin`, **changer le mot de passe** (Administration › Utilisateurs), puis `rm /data/premiere-connexion.txt`. Remplacer ensuite les textes provisoires et les champs légaux (Cabinet › Mentions légales).
 
-> Si `ADMIN_EMAIL`/`ADMIN_PASSWORD` sont absents et qu'aucun utilisateur n'existe, `/admin` propose de créer le premier compte **à n'importe quel visiteur**. Le conteneur le signale dans ses logs : ne laissez pas cet état en ligne.
+### Variables facultatives
 
-### 4. Resend (facultatif)
-Créer un compte, vérifier le domaine d'envoi (enregistrements DNS SPF/DKIM), créer une clé API.
+| Nom | Rôle |
+| --- | --- |
+| `PAYLOAD_SECRET` | Imposer sa propre clé de session (≥ 32 caractères, `openssl rand -hex 32`). Sinon générée |
+| `ADMIN_EMAIL` | Identifiant du premier administrateur (défaut `admin@cabinet.local`) |
+| `ADMIN_PASSWORD` | Mot de passe du premier administrateur (défaut : aléatoire). Utilisé **seulement** au tout premier démarrage |
+| `ADMIN_ALLOWED_ORIGINS` | Autres adresses d'accès à l'admin (ex. `https://www.exemple.fr`), séparées par des virgules |
+| `RESEND_API_KEY`, `BOOKING_TO_EMAIL`, `BOOKING_FROM_EMAIL` | E-mails de rendez-vous (ci-dessous) |
+| `BACKUP_ENABLED`, `BACKUP_HOUR`, `BACKUP_KEEP_DAYS` | Sauvegardes (voir [restauration](restauration.md)) |
 
-### 5. Laisser GitHub déclencher les déploiements
-1. Coolify → Keys & Tokens → API tokens → créer un jeton avec **deploy**, dans l'équipe qui possède l'app.
+**E-mails.** Une demande de rendez-vous est toujours enregistrée dans l'administration. `BOOKING_TO_EMAIL` ajoute une notification à l'avocat ; `RESEND_API_KEY` et `BOOKING_FROM_EMAIL` (domaine vérifié chez [Resend](https://resend.com), SPF/DKIM) permettent d'écrire au client (accusé de réception, confirmation, refus). Sans eux, l'admin affiche « E-mail non configuré » et le client n'est pas prévenu.
+
+## Voie B : `docker compose` sur n'importe quel serveur
+
+```sh
+git clone https://github.com/shadiG/lawyer.git && cd lawyer
+docker compose up -d --build          # http://IP-du-serveur:3000
+docker compose logs app               # identifiant et mot de passe du premier accès
+```
+
+Avec HTTPS (Caddy, certificat Let's Encrypt automatique ; le domaine doit pointer sur le serveur, ports 80 et 443 ouverts) :
+
+```sh
+SITE_URL=https://exemple.fr DOMAIN=exemple.fr APP_BIND=127.0.0.1:3000 \
+  docker compose --profile https up -d --build
+```
+
+Compose lit un éventuel `.env` du dossier (voir `.env.example`).
+
+## Déploiement continu depuis GitHub (Coolify)
+
+Chaque push sur `main` lance `.github/workflows/vps.yml` : CI d'abord (lint, types, tests, build), puis appel à Coolify. Un build rouge n'atteint jamais le serveur. Sans les réglages ci-dessous, le workflow saute le déploiement avec un avis.
+
+1. Coolify → Keys & Tokens → API tokens → jeton avec **deploy**, dans l'équipe qui possède l'app.
 2. Copier l'**UUID** de l'application.
 3. GitHub → Settings → Environments → **New environment** `vps` :
 
@@ -63,34 +84,27 @@ Créer un compte, vérifier le domaine d'envoi (enregistrements DNS SPF/DKIM), c
 | Secret | `COOLIFY_TOKEN` | le jeton d'API |
 
 ## Au quotidien
+
 - Redéployer à la main : Actions → **VPS deploy** → Run workflow, ou Deploy dans Coolify.
-- Revenir en arrière : dans Coolify, onglet Deployments, redéployer une version antérieure. Les données (volume) ne sont pas touchées.
+- Revenir en arrière : Coolify → Deployments, redéployer une version antérieure. Les données (volume) ne sont pas touchées.
+- Sauvegarder / restaurer : [restauration.md](restauration.md).
 - Vérifier que le site est en ligne :
   ```sh
-  for p in / /admin/login /healthz /mentions-legales /confidentialite /robots.txt /sitemap.xml; do
+  for p in / /actualites /admin/login /healthz /mentions-legales /confidentialite /robots.txt /sitemap.xml; do
     printf '%-20s ' "$p"; curl -s -o /dev/null -w '%{http_code}\n' "https://lawyer.shadgramers.com$p"; done
   ```
-- Construire et lancer l'image en local :
-  ```sh
-  docker build --build-arg NEXT_PUBLIC_SITE_URL=http://localhost:3000 -t lawyer .
-  docker run --rm -p 3000:3000 -v lawyer-data:/data \
-    -e PAYLOAD_SECRET=$(openssl rand -hex 32) \
-    -e ADMIN_EMAIL=admin@exemple.fr -e ADMIN_PASSWORD=un-mot-de-passe-solide lawyer
-  ```
-
-## Sauvegardes (à mettre en place)
-Tout ce qui est éditable (textes, photos, demandes de rendez-vous) est dans `/data`. Une perte du volume = perte de ces données, **sauf** les demandes de rendez-vous si l'e-mail de notification est configuré.
-- Sauvegarder régulièrement le volume `/data` (sauvegarde du volume Coolify, ou copie planifiée du dossier depuis l'hôte).
-- Pour une copie de la base strictement cohérente, la faire conteneur arrêté, ou passer à PostgreSQL (service géré par Coolify avec sauvegardes planifiées) : le changement se limite à l'adaptateur de base dans `payload.config.ts`.
-- Conserver `PAYLOAD_SECRET` ailleurs qu'uniquement dans Coolify.
+- Tester l'image de bout en bout (démarrage sans configuration, persistance, redéploiement, sauvegarde, restauration) : `sh scripts/docker-smoke.sh`
 
 ## Si ça ne marche pas
+
 | Symptôme | Cause probable | Correction |
 | --- | --- | --- |
-| Toutes les URLs en 502 | « Ports Exposes » différent de `3000`, ou build en cours/échoué | Mettre `3000`, enregistrer, redéployer ; sinon lire le log de déploiement |
-| Le conteneur s'arrête, log « PAYLOAD_SECRET doit contenir au moins 32 caractères » | Variable absente ou trop courte | La définir (`openssl rand -hex 32`) et redéployer |
-| `/admin` : « Vous n'êtes pas autorisé à effectuer cette action » à l'enregistrement, alors que la connexion réussit | Le site est ouvert depuis une adresse absente de `NEXT_PUBLIC_SITE_URL` / `ADMIN_ALLOWED_ORIGINS` (protection CSRF) | Ajouter l'adresse dans `ADMIN_ALLOWED_ORIGINS`, ou corriger `NEXT_PUBLIC_SITE_URL` (variable de build : reconstruire) |
-| Les modifications de l'admin disparaissent après un déploiement | Pas de volume sur `/data` | Ajouter le Persistent Storage `/data` ; les données saisies avant sont perdues |
-| Erreur d'écriture sur la base ou les photos | Droits du volume | Le conteneur corrige les droits de `/data` à chaque démarrage ; vérifier que le volume est bien monté sur `/data` |
-| `No resources found` au déploiement | Mauvais UUID, ou jeton d'une autre équipe | Le workflow liste les apps visibles : copier le bon UUID |
+| Toutes les URLs en 502 | « Ports Exposes » différent de `3000`, ou build en cours/échoué | Mettre `3000`, redéployer ; sinon lire le log de déploiement |
+| Contenu d'usine retrouvé, ou nouveau mot de passe, après chaque déploiement | Pas de volume sur `/data` | Ajouter le Persistent Storage `/data` (étape 6) ; les données saisies avant sont perdues |
+| Le conteneur s'arrête : « PAYLOAD_SECRET doit contenir au moins 32 caractères » | Variable fournie mais trop courte | La corriger, ou la supprimer pour qu'elle soit générée |
+| Le conteneur s'arrête dans les migrations | Migration en échec | Lire l'erreur dans les logs ; l'ancienne version reste en ligne ; restaurer au besoin |
+| Mot de passe du premier accès introuvable | Logs purgés | `cat /data/premiere-connexion.txt` dans le Terminal (s'il n'a pas été supprimé) |
+| `/admin` : « Vous n'êtes pas autorisé… » à l'enregistrement, alors que la connexion réussit | Adresse absente de `NEXT_PUBLIC_SITE_URL` / `ADMIN_ALLOWED_ORIGINS` (CSRF) | Ajouter l'adresse dans `ADMIN_ALLOWED_ORIGINS`, ou corriger `NEXT_PUBLIC_SITE_URL` (variable de build : reconstruire) |
 | Liens canoniques en `localhost` | `NEXT_PUBLIC_SITE_URL` absent ou non coché « Build Variable » | Le cocher et redéployer |
+| Erreur d'écriture sur la base ou les photos | Volume mal monté | Le conteneur corrige les droits de `/data` au démarrage ; vérifier que le volume est monté sur `/data` |
+| `No resources found` au déploiement | Mauvais UUID, ou jeton d'une autre équipe | Le workflow liste les apps visibles : copier le bon UUID |

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPage } from "../../_components/legal-page";
 import { getContent } from "../../_lib/cms";
+import { connection } from "next/server";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
 
 // Les informations viennent de l'administration (Cabinet › Mentions légales).
 export default async function Page() {
+  // Rendu à chaque requête : jamais de contenu du CMS figé au build (voir docs/ops/vps.md).
+  await connection();
   const { site, legal } = await getContent();
   return (
     <LegalPage site={site} title="Mentions légales" updated={legal.updated}>

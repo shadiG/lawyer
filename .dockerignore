@@ -11,3 +11,5 @@ Dockerfile
 .dockerignore
 **/.DS_Store
 npm-debug.log*
+docker-compose.yml
+Caddyfile

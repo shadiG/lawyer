@@ -45,4 +45,11 @@ Après avoir modifié une collection ou un global (`cms/`) : `npx payload genera
 
 ## Déploiement
 
-Docker sur le VPS via Coolify : voir [docs/ops/vps.md](docs/ops/vps.md).
+Docker sur le VPS via Coolify : voir [docs/ops/vps.md](docs/ops/vps.md). L'image est autonome (base SQLite, clé, premier administrateur et sauvegardes nocturnes se configurent seuls) :
+
+```sh
+docker compose up -d --build && docker compose logs app   # identifiants du premier accès
+sh scripts/docker-smoke.sh                                # test de bout en bout de l'image
+```
+
+Sauvegarde et restauration : [docs/ops/restauration.md](docs/ops/restauration.md).

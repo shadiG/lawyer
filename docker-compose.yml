@@ -1,0 +1,67 @@
+# Installation complète en un fichier, sur n'importe quel serveur Docker :
+#
+#   cp .env.example .env        # facultatif : tout fonctionne sans, voir les valeurs par défaut
+#   docker compose up -d --build
+#   docker compose logs app     # identifiant et mot de passe du premier accès
+#
+# Avec HTTPS automatique (certificat Let's Encrypt, domaine pointant sur le serveur) :
+#   SITE_URL=https://exemple.fr DOMAIN=exemple.fr APP_BIND=127.0.0.1:3000 \
+#     docker compose --profile https up -d --build
+#
+# La base de données est un fichier SQLite DANS le volume « data » : il n'y a pas de
+# conteneur de base de données à installer ni à configurer.
+# Sur Coolify, utilisez plutôt le Dockerfile seul (voir docs/ops/vps.md).
+name: cabinet
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Adresse publique, figée à la construction (liens canoniques, plan du site).
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL:-http://localhost:3000}
+    image: cabinet-app
+    restart: unless-stopped
+    ports:
+      # APP_BIND=127.0.0.1:3000 quand le proxy HTTPS (profil « https ») est utilisé.
+      - "${APP_BIND:-3000}:3000"
+    volumes:
+      - data:/data
+    environment:
+      # Vides = générés au premier démarrage et conservés dans le volume.
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_ALLOWED_ORIGINS: ${ADMIN_ALLOWED_ORIGINS:-}
+      # Notifications par e-mail (facultatif).
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      BOOKING_TO_EMAIL: ${BOOKING_TO_EMAIL:-}
+      BOOKING_FROM_EMAIL: ${BOOKING_FROM_EMAIL:-}
+      # Sauvegardes nocturnes dans /data/backups.
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-true}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+
+  # Proxy HTTPS : certificat obtenu et renouvelé automatiquement. Activé par --profile https.
+  caddy:
+    profiles: ["https"]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Votre nom de domaine (ex. exemple.fr). Par défaut « localhost » : certificat local de test.
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  data:
+  caddy_data:
+  caddy_config:

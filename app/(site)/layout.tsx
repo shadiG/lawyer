@@ -5,8 +5,11 @@ import { geist, sourceSerif } from "../_lib/fonts";
 import { siteUrl } from "../_lib/content";
 import { Providers } from "../_components/providers";
 import "../globals.css";
+import { connection } from "next/server";
 
 export async function generateMetadata(): Promise<Metadata> {
+  // Rendu à chaque requête : jamais de contenu du CMS figé au build (voir docs/ops/vps.md).
+  await connection();
   const { site, hero } = await getContent();
   const description = `${site.title}. ${richToText(hero.lead)}`.slice(0, 280);
   return {
